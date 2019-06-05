@@ -1,1 +1,3 @@
-# bgapi
+# haskell-bglib
+
+Work in progress ;)

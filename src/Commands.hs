@@ -33,11 +33,11 @@ readBGPacket' :: SerialPort -> IO BgPacket
 readBGPacket' s = do
     bgpHeader@BgPacketHeader{..} <- decode <$> BSL.fromStrict <$> recv s 4
     bgpPayload <- recv s (fromIntegral bghLength)
-    --putStr "* HEADER: "
-    --putStrLn $ show bgpHeader
-    --putStrLn "* PAYLOAD: "
-    --putStrLn $ prettyShowBS bgpPayload
-    --putStrLn ""
+    putStr "* HEADER: "
+    putStrLn $ show bgpHeader
+    putStrLn "* PAYLOAD: "
+    putStrLn $ prettyShowBS bgpPayload
+    putStrLn ""
     return $ BgPacket {..}
 
 readBGPacket :: (MonadIO m, MonadReader env m, HasSerialPort env) => m BgPacket
@@ -76,17 +76,32 @@ xCmd mt tt cc cid inp = do
     xCmd' mt tt cc cid inp
     decode . BSL.fromStrict . bgpPayload <$> ( liftIO $ waitForPacket chan mt tt cc cid )
 
+-- Generic Access Profile
+
+-- This command starts the GAP discovery procedure to scan for advertising devices i.e. to perform a device
+-- discovery.
+-- Scanning parameters can be configured with the Set Scan Parameters command before issuing this command.
+-- To cancel on an ongoing discovery process use the End Procedure command.
+cmd_gap_discover :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env) => GapDiscoveryMode -> m UInt16
+cmd_gap_discover mode = xCmd BgMsgCR BgBlue BgClsGenericAccessProfile 0x02 mode
+
+-- This command ends the current GAP discovery procedure and stop the scanning of advertising devices.
+cmd_gap_end_procedure :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env) => m UInt16
+cmd_gap_end_procedure = xCmd BgMsgCR BgBlue BgClsGenericAccessProfile 0x04 ()
+
+-- System
+
 cmd_system_address_get :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env) => m BdAddr
 cmd_system_address_get = xCmd BgMsgCR BgBlue BgClsSystem 0x02 ()
 
 cmd_system_aes_decrypt :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env) => UInt8Array -> m UInt8Array
-cmd_system_aes_decrypt a = xCmd BgMsgCR BgBlue BgClsSystem 0x11 a
+cmd_system_aes_decrypt dta = xCmd BgMsgCR BgBlue BgClsSystem 0x11 dta
 
 cmd_system_aes_encrypt :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env) => UInt8Array -> m UInt8Array
-cmd_system_aes_encrypt a = xCmd BgMsgCR BgBlue BgClsSystem 0x10 a
+cmd_system_aes_encrypt dta = xCmd BgMsgCR BgBlue BgClsSystem 0x10 dta
 
 cmd_system_aes_setkey :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env) => UInt8Array -> m ()
-cmd_system_aes_setkey a = xCmd BgMsgCR BgBlue BgClsSystem 0x0f a
+cmd_system_aes_setkey key = xCmd BgMsgCR BgBlue BgClsSystem 0x0f key
 
 cmd_system_hello :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env) => m ()
 cmd_system_hello = xCmd BgMsgCR BgBlue BgClsSystem 0x01 ()

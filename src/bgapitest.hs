@@ -1,4 +1,5 @@
 import           Commands
+import           Control.Concurrent
 import           Control.Concurrent.STM
 import           Control.Concurrent.STM.TChan
 import           Control.Monad.IO.Class
@@ -56,3 +57,9 @@ main = do
         liftIO $ putStrLn $ "Decrypted: " ++ BSS.unpack (fromUInt8Array decrypted)
         liftIO $ putStrLn ""
         liftIO $ putStrLn "Test over."
+
+        cmd_gap_discover GapDiscoverGeneric
+
+        liftIO $ threadDelay 10000000
+
+        cmd_gap_end_procedure

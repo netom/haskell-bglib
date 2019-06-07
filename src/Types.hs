@@ -13,6 +13,7 @@ module Types
     , BgCommandClass(..)
     , BgPacketHeader(..)
     , BgPacket(..)
+    , GapDiscoveryMode(..)
     , HasSerialPort(..)
     , HasBGChan(..)
     , askDupBGChan
@@ -165,3 +166,23 @@ askDupBGChan = do
 
 prettyShowBS :: BSS.ByteString -> String
 prettyShowBS = concatMap (\n -> ' ' : showHex n "") . BSS.unpack
+
+-- 0 gap_discover_limited Discover only limited discoverable devices, that is, Slaves which have the
+-- LE Limited Discoverable Mode bit set in the Flags AD type of their
+-- advertisement packets.
+-- 1 gap_discover_generic Discover limited and generic discoverable devices, that is, Slaves which
+-- have the LE Limited Discoverable Mode or the LE General Discoverable
+-- Mode bit set in the Flags AD type of their advertisement packets.
+-- 2 gap_discover_observation Discover all devices regardless of the Flags AD typ
+data GapDiscoveryMode
+    = GapDiscoverLimited
+    | GapDiscoverGeneric
+    | GapDiscoverOvservation
+    deriving (Show, Enum)
+
+instance Binary GapDiscoveryMode where
+    put m = do
+        putWord16le $ fromIntegral $ fromEnum m
+
+    get = do
+        toEnum . fromIntegral <$> getWord16le

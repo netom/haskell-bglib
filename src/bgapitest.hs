@@ -1,23 +1,37 @@
 import           Commands
+import           Control.Concurrent.STM
+import           Control.Concurrent.STM.TChan
 import           Control.Monad.IO.Class
 import           Control.Monad.Reader
 import qualified Data.ByteString.Char8 as BSS
 import           System.Hardware.Serialport
 import           Types
 
-data App = App {
-    appSerialPort :: SerialPort
-}
+data App = App
+    { appSerialPort :: SerialPort
+    , appBGChan :: TChan BgPacket
+    }
 
 instance HasSerialPort App where
     getSerialPort = appSerialPort
 
+instance HasBGChan App where
+    getBGChan = appBGChan
+
+execApp = flip runReaderT
+
 main = do
     let port = "/dev/ttyACM3"
 
-    s <- openSerial port $  SerialPortSettings CS115200 8 One NoParity NoFlowControl 1000
+    app <- App
+        <$> ( openSerial port $ SerialPortSettings CS115200 8 One NoParity NoFlowControl 1000 )
+        <*> ( atomically newBroadcastTChan )
 
-    (flip runReaderT) (App s) $ do
+    execApp app $ do
+        -- Starts a thread that keeps reading packets from the serial port,
+        -- pushing them to the broadcast TChan
+        startPacketReader
+
         liftIO $ putStrLn "Running hello"
         cmd_system_hello
         liftIO $ putStrLn ""
@@ -42,5 +56,3 @@ main = do
         liftIO $ putStrLn $ "Decrypted: " ++ BSS.unpack (fromUInt8Array decrypted)
         liftIO $ putStrLn ""
         liftIO $ putStrLn "Test over."
-
-    closeSerial s

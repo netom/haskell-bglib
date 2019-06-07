@@ -13,15 +13,20 @@ module Types
     , BgCommandClass(..)
     , BgPacketHeader(..)
     , BgPacket(..)
-    , BGAPI(..)
-    , HasBGAPI(..)
     , HasSerialPort(..)
+    , HasBGChan(..)
+    , askDupBGChan
+    , askBGChan
+    , askSerialPort
+    , bgHeaderMatches
     , fromUInt8Array
-    , toUInt8Array
     , prettyShowBS
+    , toUInt8Array
     ) where
 
+import           Control.Concurrent.STM.TChan
 import           Control.Monad.Reader
+import           Control.Concurrent.STM
 import           Data.Binary
 import           Data.Binary.Get
 import           Data.Binary.Put
@@ -87,7 +92,7 @@ data BgCommandClass
 
 data BgPacketHeader = BgPacketHeader
     { bghMessageType    :: BgMessageType
-    , gbhTechnologyType :: BgTecnologyType
+    , bghTechnologyType :: BgTecnologyType
     , bghLength         :: UInt16 -- Only 11 bits actually
     , bghCommandClass   :: BgCommandClass
     , bghCommandId      :: UInt8
@@ -97,7 +102,7 @@ instance Binary BgPacketHeader where
     put BgPacketHeader{..} = do
         putWord8
             $   fromIntegral (fromEnum bghMessageType `shift` 7)
-            .|. fromIntegral (fromEnum gbhTechnologyType `shift` 3)
+            .|. fromIntegral (fromEnum bghTechnologyType `shift` 3)
             .|. fromIntegral ((bghLength .&. 0x0700) `shift` (-8))
         putWord8 $ fromIntegral $ bghLength .&. 0x00ff
         putWord8 $ fromIntegral $ fromEnum bghCommandClass
@@ -112,12 +117,19 @@ instance Binary BgPacketHeader where
         let lHigh = oct0 .&. 0x07
 
         let bghMessageType    = toEnum $ fromIntegral $ oct0 `shift` (-7)
-        let gbhTechnologyType = toEnum $ fromIntegral $ (oct0 `shift` (-3)) .&. 0x0f
+        let bghTechnologyType = toEnum $ fromIntegral $ (oct0 `shift` (-3)) .&. 0x0f
         let bghLength         = (fromIntegral lHigh `shift` 8) + (fromIntegral lLow) :: UInt16
         let bghCommandClass   = toEnum $ fromIntegral clsId
         let bghCommandId      = cmdId
 
         return $ BgPacketHeader{..}
+
+bgHeaderMatches :: BgMessageType -> BgTecnologyType -> BgCommandClass -> UInt8 -> BgPacketHeader -> Bool
+bgHeaderMatches mt tt cc cid BgPacketHeader{..}
+    =  mt  == bghMessageType
+    && tt  == bghTechnologyType
+    && cc  == bghCommandClass
+    && cid == bghCommandId
 
 data BgPacket = BgPacket
     { bgpHeader  :: BgPacketHeader
@@ -134,15 +146,22 @@ instance Binary BgPacket where
         bgpPayload <- getByteString $ fromIntegral bghLength
         return BgPacket{..}
 
-data BGAPI = BGAPI
-    {
-    }
-
-class HasBGAPI env where
-    getBGAPI :: env -> BGAPI
-
 class HasSerialPort env where
     getSerialPort :: env -> SerialPort
+
+askSerialPort :: (MonadReader env m, HasSerialPort env) => m SerialPort
+askSerialPort = getSerialPort <$> ask
+
+class HasBGChan env where
+    getBGChan :: env -> TChan BgPacket
+
+askBGChan :: (MonadReader env m, HasBGChan env) => m (TChan BgPacket)
+askBGChan = getBGChan <$> ask
+    
+askDupBGChan :: (MonadIO m, MonadReader env m, HasBGChan env) => m (TChan BgPacket)
+askDupBGChan = do
+    chan <- getBGChan <$> ask
+    liftIO $ atomically $ dupTChan chan
 
 prettyShowBS :: BSS.ByteString -> String
 prettyShowBS = concatMap (\n -> ' ' : showHex n "") . BSS.unpack

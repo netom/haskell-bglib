@@ -1,4 +1,5 @@
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 module Types
     ( Int8
@@ -12,14 +13,19 @@ module Types
     , BgCommandClass(..)
     , BgPacketHeader(..)
     , BgPacket(..)
+    , BGAPI(..)
+    , HasBGAPI(..)
+    , HasSerialPort(..)
     ) where
 
+import           Control.Monad.Reader
 import           Data.Binary
 import           Data.Binary.Get
 import           Data.Bits
 import qualified Data.ByteString as BSS
 import qualified Data.Int as I
 import qualified Data.Word as W
+import           System.Hardware.Serialport
 import           Text.Printf
 
 -- int8           1 byte Signed 8-bit integer
@@ -119,3 +125,13 @@ instance Binary BgPacket where
         bgpHeader@BgPacketHeader{..} <- get
         bgpPayload <- getByteString $ fromIntegral bghLength
         return BgPacket{..}
+
+data BGAPI = BGAPI
+    {
+    }
+
+class HasBGAPI env where
+    getBGAPI :: env -> BGAPI
+
+class HasSerialPort env where
+    getSerialPort :: env -> SerialPort

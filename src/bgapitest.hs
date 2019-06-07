@@ -5,6 +5,7 @@ import           Control.Concurrent.STM.TChan
 import           Control.Monad.IO.Class
 import           Control.Monad.Reader
 import qualified Data.ByteString.Char8 as BSS
+import           System.Exit
 import           System.Hardware.Serialport
 import           Types
 
@@ -29,7 +30,11 @@ main = do
         <*> ( atomically newBroadcastTChan )
 
     execApp app $ do
-        -- Starts a thread that keeps reading packets from the serial port,
+        -- Register an event handler for protocol errors.
+        _ <- evt_system_protocol_error $ \reason -> do
+            die $ "*** PROTOCOL ERROR " ++ show reason
+
+            -- Starts a thread that keeps reading packets from the serial port,
         -- pushing them to the broadcast TChan
         startPacketReader
 
@@ -58,6 +63,9 @@ main = do
         liftIO $ putStrLn ""
         liftIO $ putStrLn "Test over."
 
+        -- Register an event handler for scan responses. Can be done anywhere.
+        -- The handler forks a thread that runs forever, and can be terminated
+        -- later if necessary.
         tid <- evt_gap_scan_response $ \(rssi, packet_type, sender, address_type, bond, dta) -> do
             print rssi
             print sender
@@ -65,8 +73,13 @@ main = do
 
         cmd_gap_discover GapDiscoverGeneric
 
-        liftIO $ threadDelay 10000000
+        liftIO $ threadDelay 5000000
 
         cmd_gap_end_procedure
 
         liftIO $ killThread tid
+
+        -- Let's cause trouble.
+        s <- askSerialPort
+        liftIO $ send s $ BSS.pack "a"
+        liftIO $ threadDelay 5000000

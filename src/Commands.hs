@@ -129,10 +129,17 @@ cmd_system_hello = xCmd BgMsgCR BgBlue BgClsSystem 0x01 ()
 cmd_system_reset :: (MonadIO m, MonadReader env m, HasSerialPort env) => RebootMode -> m ()
 cmd_system_reset mode = xCmd' BgMsgCR BgBlue BgClsSystem 0x01 mode
 
--- Register an event handler for GAP scan responses
-evt_gap_scan_response :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env) => ((Int8, UInt8, BdAddr, UInt8, UInt8, UInt8Array) -> IO ()) -> m ThreadId
-evt_gap_scan_response handler = do
+register_event_handler :: Binary a => (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env) => BgMessageType -> BgTecnologyType -> BgCommandClass -> UInt8 -> (a -> IO ()) -> m ThreadId
+register_event_handler mt tt cc cid handler = do
     chan <- askDupBGChan
     liftIO $ forkIO $ forever $ do
-        BgPacket{..} <- waitForPacket chan BgMsgEvent BgBlue BgClsGenericAccessProfile 0x00
+        BgPacket{..} <- waitForPacket chan mt tt cc cid
         handler $ decode $ BSL.fromStrict $ bgpPayload
+
+-- Register an event handler for GAP scan responses
+evt_gap_scan_response :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env) => ((Int8, UInt8, BdAddr, UInt8, UInt8, UInt8Array) -> IO ()) -> m ThreadId
+evt_gap_scan_response handler = register_event_handler BgMsgEvent BgBlue BgClsGenericAccessProfile 0x00 handler
+
+-- Register an event handler for GAP scan responses
+evt_system_protocol_error :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env) => (UInt16 -> IO ()) -> m ThreadId
+evt_system_protocol_error handler = register_event_handler BgMsgEvent BgBlue BgClsSystem 0x06 handler

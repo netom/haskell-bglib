@@ -61,7 +61,6 @@ main = do
         decrypted <- cmd_system_aes_decrypt encrypted
         liftIO $ putStrLn $ "Decrypted: " ++ BSS.unpack (fromUInt8Array decrypted)
         liftIO $ putStrLn ""
-        liftIO $ putStrLn "Test over."
 
         -- Register an event handler for scan responses. Can be done anywhere.
         -- The handler forks a thread that runs forever, and can be terminated

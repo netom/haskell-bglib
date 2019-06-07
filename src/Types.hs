@@ -16,6 +16,7 @@ module Types
     , GapDiscoveryMode(..)
     , HasSerialPort(..)
     , HasBGChan(..)
+    , RebootMode(..)
     , askDupBGChan
     , askBGChan
     , askSerialPort
@@ -183,6 +184,17 @@ data GapDiscoveryMode
 instance Binary GapDiscoveryMode where
     put m = do
         putWord16le $ fromIntegral $ fromEnum m
-
     get = do
         toEnum . fromIntegral <$> getWord16le
+
+data RebootMode
+    = RebootNormal
+    | RebootDfu
+    deriving (Show, Enum)
+
+instance Binary RebootMode where
+    put m = do
+        putWord8 $ fromIntegral $ fromEnum m
+    get = do
+        toEnum . fromIntegral <$> getWord8
+    

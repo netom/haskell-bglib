@@ -55,3 +55,6 @@ cmd_system_aes_encrypt a = xCmd BgMsgCR BgBlue BgClsSystem 0x10 a
 
 cmd_system_aes_setkey :: (MonadIO m, MonadReader env m, HasSerialPort env) => UInt8Array -> m ()
 cmd_system_aes_setkey a = xCmd BgMsgCR BgBlue BgClsSystem 0x0f a
+
+cmd_system_hello :: (MonadIO m, MonadReader env m, HasSerialPort env) => m ()
+cmd_system_hello = xCmd BgMsgCR BgBlue BgClsSystem 0x01 ()

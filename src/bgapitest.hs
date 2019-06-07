@@ -18,6 +18,10 @@ main = do
     s <- openSerial port $  SerialPortSettings CS115200 8 One NoParity NoFlowControl 1000
 
     (flip runReaderT) (App s) $ do
+        liftIO $ putStrLn "Running hello"
+        cmd_system_hello
+        liftIO $ putStrLn ""
+
         liftIO $ putStrLn "Getting Bluetooth Address:"
         cmd_system_address_get >>= liftIO . print
         liftIO $ putStrLn ""

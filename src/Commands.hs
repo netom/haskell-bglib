@@ -20,9 +20,9 @@ writeBGPacket :: (MonadIO m, MonadReader env m, HasSerialPort env) => BgPacket -
 writeBGPacket p = do
     s <- askSerialPort
     let packetBS = BSL.toStrict $ encode p
-    liftIO $ putStr "* PACKET: "
-    liftIO $ putStrLn $ prettyShowBS packetBS
-    liftIO $ putStrLn ""
+    --liftIO $ putStr "* PACKET: "
+    --liftIO $ putStrLn $ prettyShowBS packetBS
+    --liftIO $ putStrLn ""
     liftIO $ send s packetBS
     return ()
 
@@ -31,11 +31,11 @@ readBGPacket = do
     s <- askSerialPort
     bgpHeader@BgPacketHeader{..} <- liftIO $ decode <$> BSL.fromStrict <$> recv s 4
     bgpPayload <- liftIO $ recv s (fromIntegral bghLength)
-    liftIO $ putStr "* HEADER: "
-    liftIO $ putStrLn $ show bgpHeader
-    liftIO $ putStrLn "* PAYLOAD: "
-    liftIO $ putStrLn $ prettyShowBS bgpPayload
-    liftIO $ putStrLn ""
+    --liftIO $ putStr "* HEADER: "
+    --liftIO $ putStrLn $ show bgpHeader
+    --liftIO $ putStrLn "* PAYLOAD: "
+    --liftIO $ putStrLn $ prettyShowBS bgpPayload
+    --liftIO $ putStrLn ""
     return $ BgPacket {..}
 
 xCmd :: (MonadIO m, MonadReader env m, HasSerialPort env, Binary a, Binary b) => BgMessageType -> BgTecnologyType -> BgCommandClass -> UInt8 -> a -> m b

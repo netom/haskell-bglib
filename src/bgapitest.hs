@@ -58,8 +58,15 @@ main = do
         liftIO $ putStrLn ""
         liftIO $ putStrLn "Test over."
 
+        tid <- evt_gap_scan_response $ \(rssi, packet_type, sender, address_type, bond, dta) -> do
+            print rssi
+            print sender
+            putStrLn ""
+
         cmd_gap_discover GapDiscoverGeneric
 
         liftIO $ threadDelay 10000000
 
         cmd_gap_end_procedure
+
+        liftIO $ killThread tid

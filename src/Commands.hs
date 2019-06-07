@@ -33,11 +33,11 @@ readBGPacket' :: SerialPort -> IO BgPacket
 readBGPacket' s = do
     bgpHeader@BgPacketHeader{..} <- decode <$> BSL.fromStrict <$> recv s 4
     bgpPayload <- recv s (fromIntegral bghLength)
-    putStr "* HEADER: "
-    putStrLn $ show bgpHeader
-    putStrLn "* PAYLOAD: "
-    putStrLn $ prettyShowBS bgpPayload
-    putStrLn ""
+    --putStr "* HEADER: "
+    --putStrLn $ show bgpHeader
+    --putStrLn "* PAYLOAD: "
+    --putStrLn $ prettyShowBS bgpPayload
+    --putStrLn ""
     return $ BgPacket {..}
 
 readBGPacket :: (MonadIO m, MonadReader env m, HasSerialPort env) => m BgPacket
@@ -108,3 +108,10 @@ cmd_system_hello = xCmd BgMsgCR BgBlue BgClsSystem 0x01 ()
 
 cmd_system_reset :: (MonadIO m, MonadReader env m, HasSerialPort env) => m ()
 cmd_system_reset = xCmd' BgMsgCR BgBlue BgClsSystem 0x01 ()
+
+evt_gap_scan_response :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env) => ((Int8, UInt8, BdAddr, UInt8, UInt8, UInt8Array) -> IO ()) -> m ThreadId
+evt_gap_scan_response handler = do
+    chan <- askDupBGChan
+    liftIO $ forkIO $ forever $ do
+        BgPacket{..} <- waitForPacket chan BgMsgEvent BgBlue BgClsGenericAccessProfile 0x00
+        handler $ decode $ BSL.fromStrict $ bgpPayload

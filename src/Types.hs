@@ -16,15 +16,20 @@ module Types
     , BGAPI(..)
     , HasBGAPI(..)
     , HasSerialPort(..)
+    , fromUInt8Array
+    , toUInt8Array
+    , prettyShowBS
     ) where
 
 import           Control.Monad.Reader
 import           Data.Binary
 import           Data.Binary.Get
+import           Data.Binary.Put
 import           Data.Bits
 import qualified Data.ByteString as BSS
 import qualified Data.Int as I
 import qualified Data.Word as W
+import           Numeric
 import           System.Hardware.Serialport
 import           Text.Printf
 
@@ -43,10 +48,13 @@ type UInt32 = W.Word32
 -- uint8array     byte array, first byte is array size
 newtype UInt8Array = UInt8Array { fromUInt8Array :: BSS.ByteString }
 
+toUInt8Array :: BSS.ByteString -> UInt8Array
+toUInt8Array s = UInt8Array s
+
 instance Binary UInt8Array where
     put UInt8Array{..} = do
         putWord8 $ fromIntegral $ BSS.length fromUInt8Array
-        put fromUInt8Array
+        putByteString fromUInt8Array
 
     get = do
         l <- getWord8
@@ -90,7 +98,7 @@ instance Binary BgPacketHeader where
         putWord8
             $   fromIntegral (fromEnum bghMessageType `shift` 7)
             .|. fromIntegral (fromEnum gbhTechnologyType `shift` 3)
-            .|. fromIntegral (bghLength .&. 0x0700 `shift` (-8))
+            .|. fromIntegral ((bghLength .&. 0x0700) `shift` (-8))
         putWord8 $ fromIntegral $ bghLength .&. 0x00ff
         putWord8 $ fromIntegral $ fromEnum bghCommandClass
         putWord8 $ bghCommandId
@@ -104,7 +112,7 @@ instance Binary BgPacketHeader where
         let lHigh = oct0 .&. 0x07
 
         let bghMessageType    = toEnum $ fromIntegral $ oct0 `shift` (-7)
-        let gbhTechnologyType = toEnum $ fromIntegral $ oct0 `shift` (-3) .&. 0x0f
+        let gbhTechnologyType = toEnum $ fromIntegral $ (oct0 `shift` (-3)) .&. 0x0f
         let bghLength         = (fromIntegral lHigh `shift` 8) + (fromIntegral lLow) :: UInt16
         let bghCommandClass   = toEnum $ fromIntegral clsId
         let bghCommandId      = cmdId
@@ -119,7 +127,7 @@ data BgPacket = BgPacket
 instance Binary BgPacket where
     put BgPacket{..} = do
         put bgpHeader
-        put bgpPayload
+        putByteString bgpPayload
 
     get = do
         bgpHeader@BgPacketHeader{..} <- get
@@ -135,3 +143,6 @@ class HasBGAPI env where
 
 class HasSerialPort env where
     getSerialPort :: env -> SerialPort
+
+prettyShowBS :: BSS.ByteString -> String
+prettyShowBS = concatMap (\n -> ' ' : showHex n "") . BSS.unpack

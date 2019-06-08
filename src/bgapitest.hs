@@ -39,26 +39,26 @@ main = do
         startPacketReader
 
         liftIO $ putStrLn "Running hello"
-        cmd_system_hello
+        system_hello
         liftIO $ putStrLn ""
 
         liftIO $ putStrLn "Getting Bluetooth Address:"
-        cmd_system_address_get >>= liftIO . print
+        system_address_get >>= liftIO . print
         liftIO $ putStrLn ""
 
         let aeskey = "abcdefgh12345678"
         liftIO $ putStrLn $ "Setting AES key to " ++ aeskey
-        cmd_system_aes_setkey $ toUInt8Array $ BSS.pack $ aeskey
+        system_aes_setkey $ toUInt8Array $ BSS.pack $ aeskey
         liftIO $ putStrLn ""
 
         let plaintext = "This is plain"
         liftIO $ putStrLn $ "Encrypting: " ++ plaintext
-        encrypted <- cmd_system_aes_encrypt $ toUInt8Array $ BSS.pack $ plaintext
+        encrypted <- system_aes_encrypt $ toUInt8Array $ BSS.pack $ plaintext
         liftIO $ putStrLn $ "Encrypted: " ++ prettyShowBS (fromUInt8Array encrypted)
         liftIO $ putStrLn ""
 
         liftIO $ putStrLn $ "Decrypting"
-        decrypted <- cmd_system_aes_decrypt encrypted
+        decrypted <- system_aes_decrypt encrypted
         liftIO $ putStrLn $ "Decrypted: " ++ BSS.unpack (fromUInt8Array decrypted)
         liftIO $ putStrLn ""
 
@@ -70,11 +70,11 @@ main = do
             print sender
             putStrLn ""
 
-        cmd_gap_discover GapDiscoverGeneric
+        gap_discover GapDiscoverGeneric
 
         liftIO $ threadDelay 5000000
 
-        cmd_gap_end_procedure
+        gap_end_procedure
 
         liftIO $ killThread tid
 

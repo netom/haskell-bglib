@@ -5,6 +5,7 @@ import           Control.Concurrent.STM
 import           Control.Monad.IO.Class
 import           Control.Monad.Reader
 import qualified Data.ByteString.Char8 as BSS
+import           System.Environment
 import           System.Exit
 import           System.Hardware.Serialport
 
@@ -24,7 +25,11 @@ execApp = flip runReaderT
 
 main :: IO ()
 main = do
-    let port = "/dev/ttyACM3"
+    args <- getArgs
+
+    port <- if length args == 1
+        then return $ head args
+        else die "Usage: bgapitest <serial port>"
 
     app <- App
         <$> ( openSerial port $ SerialPortSettings CS115200 8 One NoParity NoFlowControl 1000 )

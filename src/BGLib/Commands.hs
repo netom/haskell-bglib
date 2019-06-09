@@ -1,6 +1,6 @@
 {-# LANGUAGE RecordWildCards #-}
 
-module Commands
+module BGLib.Commands
     ( startPacketReader
     , attclientAttributeWrite
     , attclientExecuteWrite
@@ -141,6 +141,7 @@ module Commands
     , evtDfuBoot    
     ) where
 
+import           BGLib.Types
 import           Control.Concurrent
 import           Control.Concurrent.STM.TChan
 import           Control.Monad.Loops
@@ -149,7 +150,6 @@ import           Data.Binary
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString as BSS
 import           System.Hardware.Serialport
-import           Types
 import           Control.Monad.IO.Class
 import           Control.Monad.Reader
 

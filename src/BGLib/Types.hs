@@ -1,7 +1,7 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
-module Types
+module BGLib.Types
     ( Int8
     , UInt8
     , UInt16

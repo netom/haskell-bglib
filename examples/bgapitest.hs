@@ -1,4 +1,5 @@
-import           Commands
+import           BGLib.Commands
+import           BGLib.Types
 import           Control.Concurrent
 import           Control.Concurrent.STM
 import           Control.Monad.IO.Class
@@ -6,7 +7,6 @@ import           Control.Monad.Reader
 import qualified Data.ByteString.Char8 as BSS
 import           System.Exit
 import           System.Hardware.Serialport
-import           Types
 
 data App = App
     { appSerialPort :: SerialPort

@@ -1,7 +1,6 @@
 import           Commands
 import           Control.Concurrent
 import           Control.Concurrent.STM
-import           Control.Concurrent.STM.TChan
 import           Control.Monad.IO.Class
 import           Control.Monad.Reader
 import qualified Data.ByteString.Char8 as BSS
@@ -20,8 +19,10 @@ instance HasSerialPort App where
 instance HasBGChan App where
     getBGChan = appBGChan
 
+execApp :: env -> ReaderT env m a -> m a
 execApp = flip runReaderT
 
+main :: IO ()
 main = do
     let port = "/dev/ttyACM3"
 
@@ -65,21 +66,21 @@ main = do
         -- Register an event handler for scan responses. Can be done anywhere.
         -- The handler forks a thread that runs forever, and can be terminated
         -- later if necessary.
-        tid <- evtGapScanResponse $ \(rssi, packet_type, sender, address_type, bond, dta) -> do
+        tid <- evtGapScanResponse $ \(rssi, _, sender, _, _, _) -> do
             print rssi
             print sender
             putStrLn ""
             return True -- We'd like to listen to further events.
 
-        gapDiscover GapDiscoverGeneric
+        _ <- gapDiscover GapDiscoverGeneric
 
         liftIO $ threadDelay 5000000
 
-        gapEndProcedure
+        _ <- gapEndProcedure
 
         liftIO $ killThread tid
 
         -- Let's cause trouble.
         s <- askSerialPort
-        liftIO $ send s $ BSS.pack "a"
+        _ <- liftIO $ send s $ BSS.pack "a"
         liftIO $ threadDelay 5000000

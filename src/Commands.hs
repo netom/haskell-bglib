@@ -1,6 +1,145 @@
 {-# LANGUAGE RecordWildCards #-}
 
-module Commands where
+module Commands
+    ( startPacketReader
+    , attclientAttributeWrite
+    , attclientExecuteWrite
+    , attclientFindByTypeValue
+    , attclientFindInformation
+    , attclientIndicateConfirm
+    , attclientPrepareWrite
+    , attclientReadByGroupType
+    , attclientReadByHandle
+    , attclientReadByType
+    , attclientReadLong
+    , attclientReadMultiple
+    , attclientWriteCommand
+    , evtAttclientAttributeValue
+    , evtAttclientFindInformationFound
+    , evtAttclientGroupFound
+    , evtAttclientIndicated
+    , evtAttclientProcedureCompleted
+    , evtAttclientReadMultipleResponse
+    , attributesRead
+    , attributesReadType
+    , attributesSend
+    , attributesUserReadResponse
+    , attributesUserWriteResponse
+    , attributesWrite
+    , evtAttributesStatus
+    , evtAttributesUserReadRequest
+    , evtAttributesValue
+    , connectionChannelMapGet
+    , connectionChannelMapSet
+    , connectionDisconnect
+    , connectionGetRssi
+    , connectionGetStatus
+    , connectionSlaveLatencyDisable
+    , connectionUpdate
+    , connectionVersionUpdate
+    , evtConnectionDisconnected
+    , evtConnectionFeatureInd
+    , evtConnectionStatus
+    , evtConnectionVersionInd
+    , gapConnectDirect
+    , gapConnectSelective
+    , gapDiscover
+    , gapEndProcedure
+    , gapSetAdvData
+    , gapSetAdvParameters
+    , gapSetDirectedConnectableMode
+    , gapSetFiltering
+    , gapSetInitiatingConParameters
+    , gapSetMode
+    , gapSetNonresolvableAddress
+    , gapSetPrivacyFlags
+    , gapSetScanParameters
+    , evtGapScanResponse
+    , hardwareAdcRead
+    , hardwareAnalogComparatorConfigIrq
+    , hardwareAnalogComparatorEnable
+    , hardwareAnalogComparatorRead
+    , hardwareGetTimestamp
+    , hardwareI2cRead
+    , hardwareI2cWrite
+    , hardwareIoPortConfigDirection
+    , hardwareIoPortConfigFunction
+    , hardwareIoPortConfigPull
+    , hardwareIoPortIrqDirection
+    , hardwareIoPortIrqEnable
+    , hardwareIoPortRead
+    , hardwareIoPortWrite
+    , hardwareSetRxgain
+    , hardwareSetSoftTimer
+    , hardwareSetTxpower
+    , hardwareSleepEnable
+    , hardwareSpiConfig
+    , hardwareSpiTransfer
+    , hardwareTimerComparator
+    , hardwareUsbEnable
+    , evtHardwareAdcResult
+    , evtHardwareAnalogComparatorStatus
+    , evtHardwareIoPortStatus
+    , evtHardwareSoftTimer
+    , flashErasePage
+    , flashPsDefrag
+    , flashPsDump
+    , flashPsEraseAll
+    , flashPsErase
+    , flashPsLoad
+    , flashPsSave
+    , flashReadData
+    , flashWriteData
+    , evtFlashPsKey
+    , smDeleteBonding
+    , smEncryptStart
+    , smGetBonds
+    , smPasskeyEntry
+    , setBondableMode
+    , smSetOobData
+    , smSetPairingDistributionKeys
+    , smSetParameters
+    , smWhitelistBonds
+    , evtSmBondingFail
+    , evtSmBondStatus
+    , evtSmPasskeyDisplay
+    , evtSmPasskeyRequest
+    , systemAddressGet
+    , systemAesDecrypt
+    , systemAesEncrypt
+    , systemAesSetkey
+    , systemDelayReset
+    , systemEndpointRx
+    , systemEndpointSetWatermarks
+    , systemEndpointTx
+    , systemGetBootloaderCrc
+    , systemGetConnections
+    , systemGetCounters
+    , systemGetInfo
+    , systemHello
+    , systemReset
+    , systemUsbEnumerationStatusGet
+    , systemWhitelistAppend
+    , systemWhitelistClear
+    , systemWhitelistRemove
+    , evtSystemBoot
+    , evtSystemEndpointWatermarkRx
+    , evtSystemEndpointWatermarkTx
+    , evtSystemNoLicenseKey
+    , evtSystemProtocolError
+    , evtSystemScriptFailure
+    , evtSystemUsbEnumerated
+    , testChannelMode
+    , testGetChannelMap
+    , testPhyEnd
+    , testPhyRx
+    , testPhyTx
+    , dfuFlashSetAddress
+    , dfuFlashUpload
+    , dfuFlashUploadFinish
+    , dfuReset
+    , evtDfuBoot    
+    ) where
 
 import           Control.Concurrent
 import           Control.Concurrent.STM.TChan
@@ -10,7 +149,6 @@ import           Data.Binary
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString as BSS
 import           System.Hardware.Serialport
-import           System.IO
 import           Types
 import           Control.Monad.IO.Class
 import           Control.Monad.Reader
@@ -22,7 +160,7 @@ writeBGPacket' s p = do
     --putStr "* PACKET: "
     --putStrLn $ prettyShowBS packetBS
     --putStrLn ""
-    send s packetBS
+    _ <- send s packetBS
     return ()
 
 -- Write the BgPacket to the SerialPort in env asked from the MonadReader
@@ -44,10 +182,10 @@ readBGPacket' s = do
     return $ BgPacket {..}
 
 -- Read one BgPacket from the SerialPort in env asked from the MonadReader
-readBGPacket :: (MonadIO m, MonadReader env m, HasSerialPort env) => m BgPacket
-readBGPacket = do
-    s <- askSerialPort
-    liftIO $ readBGPacket' s
+--readBGPacket :: (MonadIO m, MonadReader env m, HasSerialPort env) => m BgPacket
+--readBGPacket = do
+--    s <- askSerialPort
+--    liftIO $ readBGPacket' s
 
 -- Launch a thread that reads packets and sends them down a TChan BgPacket
 startPacketReader :: (MonadIO m, MonadReader env m, HasBGChan env, HasSerialPort env) => m () 
@@ -98,88 +236,177 @@ registerEventHandler mt tt cc cid handler = do
 -----------------------------------------------------------------------
 -- Attribute Client
 -----------------------------------------------------------------------
-
+attclientAttributeWrite :: a
 attclientAttributeWrite = undefined
+
+attclientExecuteWrite :: a
 attclientExecuteWrite = undefined
+
+attclientFindByTypeValue :: a
 attclientFindByTypeValue = undefined
+
+attclientFindInformation :: a
 attclientFindInformation = undefined
+
+attclientIndicateConfirm :: a
 attclientIndicateConfirm = undefined
+
+attclientPrepareWrite :: a
 attclientPrepareWrite = undefined
+
+attclientReadByGroupType :: a
 attclientReadByGroupType = undefined
+
+attclientReadByHandle :: a
 attclientReadByHandle = undefined
+
+attclientReadByType :: a
 attclientReadByType = undefined
+
+attclientReadLong :: a
 attclientReadLong = undefined
+
+attclientReadMultiple :: a
 attclientReadMultiple = undefined
+
+attclientWriteCommand :: a
 attclientWriteCommand = undefined
 
 evtAttclientAttributeValue :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env) => ((UInt8, UInt16, UInt8, UInt8Array) -> IO Bool) -> m ThreadId
 evtAttclientAttributeValue handler = registerEventHandler BgMsgEvent BgBlue BgClsAttributeClient 0x05 handler
 
+evtAttclientFindInformationFound :: a
 evtAttclientFindInformationFound = undefined
+
+evtAttclientGroupFound :: a
 evtAttclientGroupFound = undefined
+
+evtAttclientIndicated :: a
 evtAttclientIndicated = undefined
+
+evtAttclientProcedureCompleted :: a
 evtAttclientProcedureCompleted = undefined
+
+evtAttclientReadMultipleResponse :: a
 evtAttclientReadMultipleResponse = undefined
 
 -----------------------------------------------------------------------
 -- Attribute Database
 -----------------------------------------------------------------------
 
+attributesRead :: a
 attributesRead = undefined
+
+attributesReadType :: a
 attributesReadType = undefined
+
+attributesSend :: a
 attributesSend = undefined
+
+attributesUserReadResponse :: a
 attributesUserReadResponse = undefined
+
+attributesUserWriteResponse :: a
 attributesUserWriteResponse = undefined
+
+attributesWrite :: a
 attributesWrite = undefined
 
+evtAttributesStatus :: a
 evtAttributesStatus = undefined
+
+evtAttributesUserReadRequest :: a
 evtAttributesUserReadRequest = undefined
+
+evtAttributesValue :: a
 evtAttributesValue = undefined
 
 -----------------------------------------------------------------------
 -- Connection
 -----------------------------------------------------------------------
 
+connectionChannelMapGet :: a
 connectionChannelMapGet = undefined
+
+connectionChannelMapSet :: a
 connectionChannelMapSet = undefined
+
+connectionDisconnect :: a
 connectionDisconnect = undefined
+
+connectionGetRssi :: a
 connectionGetRssi = undefined
+
+connectionGetStatus :: a
 connectionGetStatus = undefined
+
+connectionSlaveLatencyDisable :: a
 connectionSlaveLatencyDisable = undefined
+
+connectionUpdate :: a
 connectionUpdate = undefined
+
+connectionVersionUpdate :: a
 connectionVersionUpdate = undefined
 
+evtConnectionDisconnected :: a
 evtConnectionDisconnected = undefined
+
+evtConnectionFeatureInd :: a
 evtConnectionFeatureInd = undefined
+
+evtConnectionStatus :: a
 evtConnectionStatus = undefined
+
+evtConnectionVersionInd :: a
 evtConnectionVersionInd = undefined
 
 -----------------------------------------------------------------------
 -- Generic Access Profile
 -----------------------------------------------------------------------
 
+gapConnectDirect :: a
 gapConnectDirect = undefined
+
+gapConnectSelective :: a
 gapConnectSelective = undefined
 
 -- This command starts the GAP discovery procedure to scan for advertising devices i.e. to perform a device
 -- discovery.
 -- Scanning parameters can be configured with the Set Scan Parameters command before issuing this command.
 -- To cancel on an ongoing discovery process use the End Procedure command.
-gapDiscover :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env) => GapDiscoveryMode -> m UInt16
+gapDiscover :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env) => GapDiscoverMode -> m UInt16
 gapDiscover mode = xCmd BgMsgCR BgBlue BgClsGenericAccessProfile 0x02 mode
 
 -- This command ends the current GAP discovery procedure and stop the scanning of advertising devices.
 gapEndProcedure :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env) => m UInt16
 gapEndProcedure = xCmd BgMsgCR BgBlue BgClsGenericAccessProfile 0x04 ()
 
+gapSetAdvData :: a
 gapSetAdvData = undefined
+
+gapSetAdvParameters :: a
 gapSetAdvParameters = undefined
+
+gapSetDirectedConnectableMode :: a
 gapSetDirectedConnectableMode = undefined
+
+gapSetFiltering :: a
 gapSetFiltering = undefined
+
+gapSetInitiatingConParameters :: a
 gapSetInitiatingConParameters = undefined
+
+gapSetMode :: a
 gapSetMode = undefined
+
+gapSetNonresolvableAddress :: a
 gapSetNonresolvableAddress = undefined
+
+gapSetPrivacyFlags :: a
 gapSetPrivacyFlags = undefined
+
+gapSetScanParameters :: a
 gapSetScanParameters = undefined
 
 -- Register an event handler for GAP scan responses
@@ -190,69 +417,160 @@ evtGapScanResponse handler = registerEventHandler BgMsgEvent BgBlue BgClsGeneric
 -- Hardware
 -----------------------------------------------------------------------
 
+hardwareAdcRead :: a
 hardwareAdcRead = undefined
+
+hardwareAnalogComparatorConfigIrq :: a
 hardwareAnalogComparatorConfigIrq = undefined
+
+hardwareAnalogComparatorEnable :: a
 hardwareAnalogComparatorEnable = undefined
+
+hardwareAnalogComparatorRead :: a
 hardwareAnalogComparatorRead = undefined
+
+hardwareGetTimestamp :: a
 hardwareGetTimestamp = undefined
+
+hardwareI2cRead :: a
 hardwareI2cRead = undefined
+
+hardwareI2cWrite :: a
 hardwareI2cWrite = undefined
+
+hardwareIoPortConfigDirection :: a
 hardwareIoPortConfigDirection = undefined
+
+hardwareIoPortConfigFunction :: a
 hardwareIoPortConfigFunction = undefined
+
+hardwareIoPortConfigPull :: a
 hardwareIoPortConfigPull = undefined
+
+hardwareIoPortIrqDirection :: a
 hardwareIoPortIrqDirection = undefined
+
+hardwareIoPortIrqEnable :: a
 hardwareIoPortIrqEnable = undefined
+
+hardwareIoPortRead :: a
 hardwareIoPortRead = undefined
+
+hardwareIoPortWrite :: a
 hardwareIoPortWrite = undefined
+
+hardwareSetRxgain :: a
 hardwareSetRxgain = undefined
+
+hardwareSetSoftTimer :: a
 hardwareSetSoftTimer = undefined
+
+hardwareSetTxpower :: a
 hardwareSetTxpower = undefined
+
+hardwareSleepEnable :: a
 hardwareSleepEnable = undefined
+
+hardwareSpiConfig :: a
 hardwareSpiConfig = undefined
+
+hardwareSpiTransfer :: a
 hardwareSpiTransfer = undefined
+
+hardwareTimerComparator :: a
 hardwareTimerComparator = undefined
+
+hardwareUsbEnable :: a
 hardwareUsbEnable = undefined
 
+evtHardwareAdcResult :: a
 evtHardwareAdcResult = undefined
+
+evtHardwareAnalogComparatorStatus :: a
 evtHardwareAnalogComparatorStatus = undefined
+
+evtHardwareIoPortStatus :: a
 evtHardwareIoPortStatus = undefined
+
+evtHardwareSoftTimer :: a
 evtHardwareSoftTimer = undefined
 
 -----------------------------------------------------------------------
 -- Persistent Store
 -----------------------------------------------------------------------
 
+flashErasePage :: a
 flashErasePage = undefined
+
+flashPsDefrag :: a
 flashPsDefrag = undefined
+
+flashPsDump :: a
 flashPsDump = undefined
+
+flashPsEraseAll :: a
 flashPsEraseAll = undefined
+
+flashPsErase :: a
 flashPsErase = undefined
+
+flashPsLoad :: a
 flashPsLoad = undefined
+
+flashPsSave :: a
 flashPsSave = undefined
+
+flashReadData :: a
 flashReadData = undefined
+
+flashWriteData :: a
 flashWriteData = undefined
 
+evtFlashPsKey :: a
 evtFlashPsKey = undefined
 
 -----------------------------------------------------------------------
 -- Security Manager
 -----------------------------------------------------------------------
 
+smDeleteBonding :: a
 smDeleteBonding = undefined
+
+smEncryptStart :: a
 smEncryptStart = undefined
+
+smGetBonds :: a
 smGetBonds = undefined
+
+smPasskeyEntry :: a
 smPasskeyEntry = undefined
+
+setBondableMode :: a
 setBondableMode = undefined
+
+smSetOobData :: a
 smSetOobData = undefined
+
+smSetPairingDistributionKeys :: a
 smSetPairingDistributionKeys = undefined
+
+smSetParameters :: a
 smSetParameters = undefined
+
+smWhitelistBonds :: a
 smWhitelistBonds = undefined
 
+evtSmBondingFail :: a
 evtSmBondingFail = undefined
-evtSmBondStatus = undefined
-evtSmPasskeyDisplay = undefined
-evtSmPasskeyRequest = undefined
 
+evtSmBondStatus :: a
+evtSmBondStatus = undefined
+
+evtSmPasskeyDisplay :: a
+evtSmPasskeyDisplay = undefined
+
+evtSmPasskeyRequest :: a
+evtSmPasskeyRequest = undefined
 
 -----------------------------------------------------------------------
 -- System
@@ -275,13 +593,28 @@ systemAesEncrypt dta = xCmd BgMsgCR BgBlue BgClsSystem 0x10 dta
 systemAesSetkey :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env) => UInt8Array -> m ()
 systemAesSetkey key = xCmd BgMsgCR BgBlue BgClsSystem 0x0f key
 
+systemDelayReset :: a
 systemDelayReset = undefined
+
+systemEndpointRx :: a
 systemEndpointRx = undefined
+
+systemEndpointSetWatermarks :: a
 systemEndpointSetWatermarks = undefined
+
+systemEndpointTx :: a
 systemEndpointTx = undefined
+
+systemGetBootloaderCrc :: a
 systemGetBootloaderCrc = undefined
+
+systemGetConnections :: a
 systemGetConnections = undefined
+
+systemGetCounters :: a
 systemGetCounters = undefined
+
+systemGetInfo :: a
 systemGetInfo = undefined
 
 
@@ -293,40 +626,74 @@ systemHello = xCmd BgMsgCR BgBlue BgClsSystem 0x01 ()
 systemReset :: (MonadIO m, MonadReader env m, HasSerialPort env) => RebootMode -> m ()
 systemReset mode = xCmd' BgMsgCR BgBlue BgClsSystem 0x01 mode
 
+systemUsbEnumerationStatusGet :: a
 systemUsbEnumerationStatusGet = undefined
+
+systemWhitelistAppend :: a
 systemWhitelistAppend = undefined
+
+systemWhitelistClear :: a
 systemWhitelistClear = undefined
+
+systemWhitelistRemove :: a
 systemWhitelistRemove = undefined
 
+evtSystemBoot :: a
 evtSystemBoot = undefined
+
+evtSystemEndpointWatermarkRx :: a
 evtSystemEndpointWatermarkRx = undefined
+
+evtSystemEndpointWatermarkTx :: a
 evtSystemEndpointWatermarkTx = undefined
+
+evtSystemNoLicenseKey :: a
 evtSystemNoLicenseKey = undefined
 
 -- Event handler for protocol errors
-evtSystemProtocolError :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env) => (UInt16 -> IO Bool) -> m ThreadId
+evtSystemProtocolError :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env) => (BGAPIError -> IO Bool) -> m ThreadId
 evtSystemProtocolError handler = registerEventHandler BgMsgEvent BgBlue BgClsSystem 0x06 handler
 
+evtSystemScriptFailure :: a
 evtSystemScriptFailure = undefined
+
+evtSystemUsbEnumerated :: a
 evtSystemUsbEnumerated = undefined
 
 -----------------------------------------------------------------------
 -- Testing
 -----------------------------------------------------------------------
 
+testChannelMode :: a
 testChannelMode = undefined
+
+testGetChannelMap :: a
 testGetChannelMap = undefined
+
+testPhyEnd :: a
 testPhyEnd = undefined
+
+testPhyRx :: a
 testPhyRx = undefined
+
+testPhyTx :: a
 testPhyTx = undefined
 
 -----------------------------------------------------------------------
 -- Device Firmware Upgrade
 -----------------------------------------------------------------------
 
+dfuFlashSetAddress :: a
 dfuFlashSetAddress = undefined
+
+dfuFlashUpload :: a
 dfuFlashUpload = undefined
+
+dfuFlashUploadFinish :: a
 dfuFlashUploadFinish = undefined
+
+dfuReset :: a
 dfuReset = undefined
 
+evtDfuBoot :: a
 evtDfuBoot = undefined

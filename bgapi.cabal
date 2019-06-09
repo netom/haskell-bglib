@@ -24,9 +24,8 @@ cabal-version:       >=1.10
 
 executable bgapitest
   hs-source-dirs:      src
-  ghc-options:         -O2 -threaded
+  ghc-options:         -Wall -O2 -threaded
   other-modules:       Commands
-                     , Loop
                      , Types
   main-is:             bgapitest.hs
   build-depends:       base >= 4.7 && < 5

@@ -31,7 +31,7 @@ main = do
 
     execApp app $ do
         -- Register an event handler for protocol errors.
-        _ <- evt_system_protocol_error $ \reason -> do
+        _ <- evtSystemProtocolError $ \reason -> do
             die $ "*** PROTOCOL ERROR " ++ show reason
 
             -- Starts a thread that keeps reading packets from the serial port,
@@ -39,43 +39,43 @@ main = do
         startPacketReader
 
         liftIO $ putStrLn "Running hello"
-        system_hello
+        systemHello
         liftIO $ putStrLn ""
 
         liftIO $ putStrLn "Getting Bluetooth Address:"
-        system_address_get >>= liftIO . print
+        systemAddressGet >>= liftIO . print
         liftIO $ putStrLn ""
 
         let aeskey = "abcdefgh12345678"
         liftIO $ putStrLn $ "Setting AES key to " ++ aeskey
-        system_aes_setkey $ toUInt8Array $ BSS.pack $ aeskey
+        systemAesSetkey $ toUInt8Array $ BSS.pack $ aeskey
         liftIO $ putStrLn ""
 
         let plaintext = "This is plain"
         liftIO $ putStrLn $ "Encrypting: " ++ plaintext
-        encrypted <- system_aes_encrypt $ toUInt8Array $ BSS.pack $ plaintext
+        encrypted <- systemAesEncrypt $ toUInt8Array $ BSS.pack $ plaintext
         liftIO $ putStrLn $ "Encrypted: " ++ prettyShowBS (fromUInt8Array encrypted)
         liftIO $ putStrLn ""
 
         liftIO $ putStrLn $ "Decrypting"
-        decrypted <- system_aes_decrypt encrypted
+        decrypted <- systemAesDecrypt encrypted
         liftIO $ putStrLn $ "Decrypted: " ++ BSS.unpack (fromUInt8Array decrypted)
         liftIO $ putStrLn ""
 
         -- Register an event handler for scan responses. Can be done anywhere.
         -- The handler forks a thread that runs forever, and can be terminated
         -- later if necessary.
-        tid <- evt_gap_scan_response $ \(rssi, packet_type, sender, address_type, bond, dta) -> do
+        tid <- evtGapScanResponse $ \(rssi, packet_type, sender, address_type, bond, dta) -> do
             print rssi
             print sender
             putStrLn ""
             return True -- We'd like to listen to further events.
 
-        gap_discover GapDiscoverGeneric
+        gapDiscover GapDiscoverGeneric
 
         liftIO $ threadDelay 5000000
 
-        gap_end_procedure
+        gapEndProcedure
 
         liftIO $ killThread tid
 

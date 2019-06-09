@@ -69,6 +69,7 @@ main = do
             print rssi
             print sender
             putStrLn ""
+            return True -- We'd like to listen to further events.
 
         gap_discover GapDiscoverGeneric
 

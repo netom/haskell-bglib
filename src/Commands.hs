@@ -85,12 +85,15 @@ xCmd mt tt cc cid inp = do
     xCmd' mt tt cc cid inp
     decode . BSL.fromStrict . bgpPayload <$> ( liftIO $ waitForPacket chan mt tt cc cid )
 
-register_event_handler :: Binary a => (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env) => BgMessageType -> BgTecnologyType -> BgCommandClass -> UInt8 -> (a -> IO ()) -> m ThreadId
+register_event_handler :: Binary a => (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env) => BgMessageType -> BgTecnologyType -> BgCommandClass -> UInt8 -> (a -> IO Bool) -> m ThreadId
 register_event_handler mt tt cc cid handler = do
     chan <- askDupBGChan
-    liftIO $ forkIO $ forever $ do
-        BgPacket{..} <- waitForPacket chan mt tt cc cid
-        handler $ decode $ BSL.fromStrict $ bgpPayload
+    liftIO $ forkIO $ go chan
+    where
+        go chan = do
+            BgPacket{..} <- waitForPacket chan mt tt cc cid
+            continue <- handler $ decode $ BSL.fromStrict $ bgpPayload
+            if continue then go chan else return ()
 
 -----------------------------------------------------------------------
 -- Attribute Client
@@ -109,7 +112,7 @@ attclient_read_long = undefined
 attclient_read_multiple = undefined
 attclient_write_command = undefined
 
-evt_attclient_attribute_value :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env) => ((UInt8, UInt16, UInt8, UInt8Array) -> IO ()) -> m ThreadId
+evt_attclient_attribute_value :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env) => ((UInt8, UInt16, UInt8, UInt8Array) -> IO Bool) -> m ThreadId
 evt_attclient_attribute_value handler = register_event_handler BgMsgEvent BgBlue BgClsAttributeClient 0x05 handler
 
 evt_attclient_find_information_found = undefined
@@ -180,7 +183,7 @@ gap_set_privacy_flags = undefined
 gap_set_scan_parameters = undefined
 
 -- Register an event handler for GAP scan responses
-evt_gap_scan_response :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env) => ((Int8, UInt8, BdAddr, UInt8, UInt8, UInt8Array) -> IO ()) -> m ThreadId
+evt_gap_scan_response :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env) => ((Int8, UInt8, BdAddr, UInt8, UInt8, UInt8Array) -> IO Bool) -> m ThreadId
 evt_gap_scan_response handler = register_event_handler BgMsgEvent BgBlue BgClsGenericAccessProfile 0x00 handler
 
 -----------------------------------------------------------------------
@@ -301,7 +304,7 @@ evt_system_endpoint_watermark_tx = undefined
 evt_system_no_license_key = undefined
 
 -- Event handler for protocol errors
-evt_system_protocol_error :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env) => (UInt16 -> IO ()) -> m ThreadId
+evt_system_protocol_error :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env) => (UInt16 -> IO Bool) -> m ThreadId
 evt_system_protocol_error handler = register_event_handler BgMsgEvent BgBlue BgClsSystem 0x06 handler
 
 evt_system_script_failure = undefined

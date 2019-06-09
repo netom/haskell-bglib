@@ -1,9 +1,9 @@
-name:                bgapi
+name:                bglib
 version:             0.1.0.0
 -- synopsis:
 -- description:
 homepage:            https://github.com/netom/bgapi#readme
-license:             BSD3
+license:             MIT
 license-file:        LICENSE
 author:              Tamas Fabian
 maintainer:          giganetom@gmail.com
@@ -13,21 +13,11 @@ build-type:          Simple
 extra-source-files:  README.md
 cabal-version:       >=1.10
 
---library
---  hs-source-dirs:      src
---  exposed-modules:     Lib
---  build-depends:       base >= 4.7 && < 5
---                     , bytestring
---                     , serialport
---                     , fixed-vector
---  default-language:    Haskell2010
-
-executable bgapitest
+library
   hs-source-dirs:      src
   ghc-options:         -Wall -O2 -threaded
-  other-modules:       Commands
+  exposed-modules:     Commands
                      , Types
-  main-is:             bgapitest.hs
   build-depends:       base >= 4.7 && < 5
                      , binary
                      , bytestring
@@ -39,4 +29,4 @@ executable bgapitest
 
 source-repository head
   type:     git
-  location: https://github.com/netom/bgapi
+  location: https://github.com/netom/haskell-bglib

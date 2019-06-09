@@ -237,139 +237,139 @@ registerEventHandler mt tt cc cid handler = do
 -- Attribute Client
 -----------------------------------------------------------------------
 attclientAttributeWrite :: a
-attclientAttributeWrite = undefined
+attclientAttributeWrite = error "Not implemented yet."
 
 attclientExecuteWrite :: a
-attclientExecuteWrite = undefined
+attclientExecuteWrite = error "Not implemented yet."
 
 attclientFindByTypeValue :: a
-attclientFindByTypeValue = undefined
+attclientFindByTypeValue = error "Not implemented yet."
 
 attclientFindInformation :: a
-attclientFindInformation = undefined
+attclientFindInformation = error "Not implemented yet."
 
 attclientIndicateConfirm :: a
-attclientIndicateConfirm = undefined
+attclientIndicateConfirm = error "Not implemented yet."
 
 attclientPrepareWrite :: a
-attclientPrepareWrite = undefined
+attclientPrepareWrite = error "Not implemented yet."
 
 attclientReadByGroupType :: a
-attclientReadByGroupType = undefined
+attclientReadByGroupType = error "Not implemented yet."
 
 attclientReadByHandle :: a
-attclientReadByHandle = undefined
+attclientReadByHandle = error "Not implemented yet."
 
 attclientReadByType :: a
-attclientReadByType = undefined
+attclientReadByType = error "Not implemented yet."
 
 attclientReadLong :: a
-attclientReadLong = undefined
+attclientReadLong = error "Not implemented yet."
 
 attclientReadMultiple :: a
-attclientReadMultiple = undefined
+attclientReadMultiple = error "Not implemented yet."
 
 attclientWriteCommand :: a
-attclientWriteCommand = undefined
+attclientWriteCommand = error "Not implemented yet."
 
 evtAttclientAttributeValue :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env) => ((UInt8, UInt16, UInt8, UInt8Array) -> IO Bool) -> m ThreadId
 evtAttclientAttributeValue handler = registerEventHandler BgMsgEvent BgBlue BgClsAttributeClient 0x05 handler
 
 evtAttclientFindInformationFound :: a
-evtAttclientFindInformationFound = undefined
+evtAttclientFindInformationFound = error "Not implemented yet."
 
 evtAttclientGroupFound :: a
-evtAttclientGroupFound = undefined
+evtAttclientGroupFound = error "Not implemented yet."
 
 evtAttclientIndicated :: a
-evtAttclientIndicated = undefined
+evtAttclientIndicated = error "Not implemented yet."
 
 evtAttclientProcedureCompleted :: a
-evtAttclientProcedureCompleted = undefined
+evtAttclientProcedureCompleted = error "Not implemented yet."
 
 evtAttclientReadMultipleResponse :: a
-evtAttclientReadMultipleResponse = undefined
+evtAttclientReadMultipleResponse = error "Not implemented yet."
 
 -----------------------------------------------------------------------
 -- Attribute Database
 -----------------------------------------------------------------------
 
 attributesRead :: a
-attributesRead = undefined
+attributesRead = error "Not implemented yet."
 
 attributesReadType :: a
-attributesReadType = undefined
+attributesReadType = error "Not implemented yet."
 
 attributesSend :: a
-attributesSend = undefined
+attributesSend = error "Not implemented yet."
 
 attributesUserReadResponse :: a
-attributesUserReadResponse = undefined
+attributesUserReadResponse = error "Not implemented yet."
 
 attributesUserWriteResponse :: a
-attributesUserWriteResponse = undefined
+attributesUserWriteResponse = error "Not implemented yet."
 
 attributesWrite :: a
-attributesWrite = undefined
+attributesWrite = error "Not implemented yet."
 
 evtAttributesStatus :: a
-evtAttributesStatus = undefined
+evtAttributesStatus = error "Not implemented yet."
 
 evtAttributesUserReadRequest :: a
-evtAttributesUserReadRequest = undefined
+evtAttributesUserReadRequest = error "Not implemented yet."
 
 evtAttributesValue :: a
-evtAttributesValue = undefined
+evtAttributesValue = error "Not implemented yet."
 
 -----------------------------------------------------------------------
 -- Connection
 -----------------------------------------------------------------------
 
 connectionChannelMapGet :: a
-connectionChannelMapGet = undefined
+connectionChannelMapGet = error "Not implemented yet."
 
 connectionChannelMapSet :: a
-connectionChannelMapSet = undefined
+connectionChannelMapSet = error "Not implemented yet."
 
 connectionDisconnect :: a
-connectionDisconnect = undefined
+connectionDisconnect = error "Not implemented yet."
 
 connectionGetRssi :: a
-connectionGetRssi = undefined
+connectionGetRssi = error "Not implemented yet."
 
 connectionGetStatus :: a
-connectionGetStatus = undefined
+connectionGetStatus = error "Not implemented yet."
 
 connectionSlaveLatencyDisable :: a
-connectionSlaveLatencyDisable = undefined
+connectionSlaveLatencyDisable = error "Not implemented yet."
 
 connectionUpdate :: a
-connectionUpdate = undefined
+connectionUpdate = error "Not implemented yet."
 
 connectionVersionUpdate :: a
-connectionVersionUpdate = undefined
+connectionVersionUpdate = error "Not implemented yet."
 
 evtConnectionDisconnected :: a
-evtConnectionDisconnected = undefined
+evtConnectionDisconnected = error "Not implemented yet."
 
 evtConnectionFeatureInd :: a
-evtConnectionFeatureInd = undefined
+evtConnectionFeatureInd = error "Not implemented yet."
 
 evtConnectionStatus :: a
-evtConnectionStatus = undefined
+evtConnectionStatus = error "Not implemented yet."
 
 evtConnectionVersionInd :: a
-evtConnectionVersionInd = undefined
+evtConnectionVersionInd = error "Not implemented yet."
 
 -----------------------------------------------------------------------
 -- Generic Access Profile
 -----------------------------------------------------------------------
 
 gapConnectDirect :: a
-gapConnectDirect = undefined
+gapConnectDirect = error "Not implemented yet."
 
 gapConnectSelective :: a
-gapConnectSelective = undefined
+gapConnectSelective = error "Not implemented yet."
 
 -- This command starts the GAP discovery procedure to scan for advertising devices i.e. to perform a device
 -- discovery.
@@ -383,31 +383,31 @@ gapEndProcedure :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan e
 gapEndProcedure = xCmd BgMsgCR BgBlue BgClsGenericAccessProfile 0x04 ()
 
 gapSetAdvData :: a
-gapSetAdvData = undefined
+gapSetAdvData = error "Not implemented yet."
 
 gapSetAdvParameters :: a
-gapSetAdvParameters = undefined
+gapSetAdvParameters = error "Not implemented yet."
 
 gapSetDirectedConnectableMode :: a
-gapSetDirectedConnectableMode = undefined
+gapSetDirectedConnectableMode = error "Not implemented yet."
 
 gapSetFiltering :: a
-gapSetFiltering = undefined
+gapSetFiltering = error "Not implemented yet."
 
 gapSetInitiatingConParameters :: a
-gapSetInitiatingConParameters = undefined
+gapSetInitiatingConParameters = error "Not implemented yet."
 
 gapSetMode :: a
-gapSetMode = undefined
+gapSetMode = error "Not implemented yet."
 
 gapSetNonresolvableAddress :: a
-gapSetNonresolvableAddress = undefined
+gapSetNonresolvableAddress = error "Not implemented yet."
 
 gapSetPrivacyFlags :: a
-gapSetPrivacyFlags = undefined
+gapSetPrivacyFlags = error "Not implemented yet."
 
 gapSetScanParameters :: a
-gapSetScanParameters = undefined
+gapSetScanParameters = error "Not implemented yet."
 
 -- Register an event handler for GAP scan responses
 evtGapScanResponse :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env) => ((Int8, UInt8, BdAddr, UInt8, UInt8, UInt8Array) -> IO Bool) -> m ThreadId
@@ -418,159 +418,159 @@ evtGapScanResponse handler = registerEventHandler BgMsgEvent BgBlue BgClsGeneric
 -----------------------------------------------------------------------
 
 hardwareAdcRead :: a
-hardwareAdcRead = undefined
+hardwareAdcRead = error "Not implemented yet."
 
 hardwareAnalogComparatorConfigIrq :: a
-hardwareAnalogComparatorConfigIrq = undefined
+hardwareAnalogComparatorConfigIrq = error "Not implemented yet."
 
 hardwareAnalogComparatorEnable :: a
-hardwareAnalogComparatorEnable = undefined
+hardwareAnalogComparatorEnable = error "Not implemented yet."
 
 hardwareAnalogComparatorRead :: a
-hardwareAnalogComparatorRead = undefined
+hardwareAnalogComparatorRead = error "Not implemented yet."
 
 hardwareGetTimestamp :: a
-hardwareGetTimestamp = undefined
+hardwareGetTimestamp = error "Not implemented yet."
 
 hardwareI2cRead :: a
-hardwareI2cRead = undefined
+hardwareI2cRead = error "Not implemented yet."
 
 hardwareI2cWrite :: a
-hardwareI2cWrite = undefined
+hardwareI2cWrite = error "Not implemented yet."
 
 hardwareIoPortConfigDirection :: a
-hardwareIoPortConfigDirection = undefined
+hardwareIoPortConfigDirection = error "Not implemented yet."
 
 hardwareIoPortConfigFunction :: a
-hardwareIoPortConfigFunction = undefined
+hardwareIoPortConfigFunction = error "Not implemented yet."
 
 hardwareIoPortConfigPull :: a
-hardwareIoPortConfigPull = undefined
+hardwareIoPortConfigPull = error "Not implemented yet."
 
 hardwareIoPortIrqDirection :: a
-hardwareIoPortIrqDirection = undefined
+hardwareIoPortIrqDirection = error "Not implemented yet."
 
 hardwareIoPortIrqEnable :: a
-hardwareIoPortIrqEnable = undefined
+hardwareIoPortIrqEnable = error "Not implemented yet."
 
 hardwareIoPortRead :: a
-hardwareIoPortRead = undefined
+hardwareIoPortRead = error "Not implemented yet."
 
 hardwareIoPortWrite :: a
-hardwareIoPortWrite = undefined
+hardwareIoPortWrite = error "Not implemented yet."
 
 hardwareSetRxgain :: a
-hardwareSetRxgain = undefined
+hardwareSetRxgain = error "Not implemented yet."
 
 hardwareSetSoftTimer :: a
-hardwareSetSoftTimer = undefined
+hardwareSetSoftTimer = error "Not implemented yet."
 
 hardwareSetTxpower :: a
-hardwareSetTxpower = undefined
+hardwareSetTxpower = error "Not implemented yet."
 
 hardwareSleepEnable :: a
-hardwareSleepEnable = undefined
+hardwareSleepEnable = error "Not implemented yet."
 
 hardwareSpiConfig :: a
-hardwareSpiConfig = undefined
+hardwareSpiConfig = error "Not implemented yet."
 
 hardwareSpiTransfer :: a
-hardwareSpiTransfer = undefined
+hardwareSpiTransfer = error "Not implemented yet."
 
 hardwareTimerComparator :: a
-hardwareTimerComparator = undefined
+hardwareTimerComparator = error "Not implemented yet."
 
 hardwareUsbEnable :: a
-hardwareUsbEnable = undefined
+hardwareUsbEnable = error "Not implemented yet."
 
 evtHardwareAdcResult :: a
-evtHardwareAdcResult = undefined
+evtHardwareAdcResult = error "Not implemented yet."
 
 evtHardwareAnalogComparatorStatus :: a
-evtHardwareAnalogComparatorStatus = undefined
+evtHardwareAnalogComparatorStatus = error "Not implemented yet."
 
 evtHardwareIoPortStatus :: a
-evtHardwareIoPortStatus = undefined
+evtHardwareIoPortStatus = error "Not implemented yet."
 
 evtHardwareSoftTimer :: a
-evtHardwareSoftTimer = undefined
+evtHardwareSoftTimer = error "Not implemented yet."
 
 -----------------------------------------------------------------------
 -- Persistent Store
 -----------------------------------------------------------------------
 
 flashErasePage :: a
-flashErasePage = undefined
+flashErasePage = error "Not implemented yet."
 
 flashPsDefrag :: a
-flashPsDefrag = undefined
+flashPsDefrag = error "Not implemented yet."
 
 flashPsDump :: a
-flashPsDump = undefined
+flashPsDump = error "Not implemented yet."
 
 flashPsEraseAll :: a
-flashPsEraseAll = undefined
+flashPsEraseAll = error "Not implemented yet."
 
 flashPsErase :: a
-flashPsErase = undefined
+flashPsErase = error "Not implemented yet."
 
 flashPsLoad :: a
-flashPsLoad = undefined
+flashPsLoad = error "Not implemented yet."
 
 flashPsSave :: a
-flashPsSave = undefined
+flashPsSave = error "Not implemented yet."
 
 flashReadData :: a
-flashReadData = undefined
+flashReadData = error "Not implemented yet."
 
 flashWriteData :: a
-flashWriteData = undefined
+flashWriteData = error "Not implemented yet."
 
 evtFlashPsKey :: a
-evtFlashPsKey = undefined
+evtFlashPsKey = error "Not implemented yet."
 
 -----------------------------------------------------------------------
 -- Security Manager
 -----------------------------------------------------------------------
 
 smDeleteBonding :: a
-smDeleteBonding = undefined
+smDeleteBonding = error "Not implemented yet."
 
 smEncryptStart :: a
-smEncryptStart = undefined
+smEncryptStart = error "Not implemented yet."
 
 smGetBonds :: a
-smGetBonds = undefined
+smGetBonds = error "Not implemented yet."
 
 smPasskeyEntry :: a
-smPasskeyEntry = undefined
+smPasskeyEntry = error "Not implemented yet."
 
 setBondableMode :: a
-setBondableMode = undefined
+setBondableMode = error "Not implemented yet."
 
 smSetOobData :: a
-smSetOobData = undefined
+smSetOobData = error "Not implemented yet."
 
 smSetPairingDistributionKeys :: a
-smSetPairingDistributionKeys = undefined
+smSetPairingDistributionKeys = error "Not implemented yet."
 
 smSetParameters :: a
-smSetParameters = undefined
+smSetParameters = error "Not implemented yet."
 
 smWhitelistBonds :: a
-smWhitelistBonds = undefined
+smWhitelistBonds = error "Not implemented yet."
 
 evtSmBondingFail :: a
-evtSmBondingFail = undefined
+evtSmBondingFail = error "Not implemented yet."
 
 evtSmBondStatus :: a
-evtSmBondStatus = undefined
+evtSmBondStatus = error "Not implemented yet."
 
 evtSmPasskeyDisplay :: a
-evtSmPasskeyDisplay = undefined
+evtSmPasskeyDisplay = error "Not implemented yet."
 
 evtSmPasskeyRequest :: a
-evtSmPasskeyRequest = undefined
+evtSmPasskeyRequest = error "Not implemented yet."
 
 -----------------------------------------------------------------------
 -- System
@@ -594,28 +594,28 @@ systemAesSetkey :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan e
 systemAesSetkey key = xCmd BgMsgCR BgBlue BgClsSystem 0x0f key
 
 systemDelayReset :: a
-systemDelayReset = undefined
+systemDelayReset = error "Not implemented yet."
 
 systemEndpointRx :: a
-systemEndpointRx = undefined
+systemEndpointRx = error "Not implemented yet."
 
 systemEndpointSetWatermarks :: a
-systemEndpointSetWatermarks = undefined
+systemEndpointSetWatermarks = error "Not implemented yet."
 
 systemEndpointTx :: a
-systemEndpointTx = undefined
+systemEndpointTx = error "Not implemented yet."
 
 systemGetBootloaderCrc :: a
-systemGetBootloaderCrc = undefined
+systemGetBootloaderCrc = error "Not implemented yet."
 
 systemGetConnections :: a
-systemGetConnections = undefined
+systemGetConnections = error "Not implemented yet."
 
 systemGetCounters :: a
-systemGetCounters = undefined
+systemGetCounters = error "Not implemented yet."
 
 systemGetInfo :: a
-systemGetInfo = undefined
+systemGetInfo = error "Not implemented yet."
 
 
 -- This command can be used to test if the local device is functional. Similar to a typical "AT" -> "OK" test.
@@ -627,73 +627,73 @@ systemReset :: (MonadIO m, MonadReader env m, HasSerialPort env) => RebootMode -
 systemReset mode = xCmd' BgMsgCR BgBlue BgClsSystem 0x01 mode
 
 systemUsbEnumerationStatusGet :: a
-systemUsbEnumerationStatusGet = undefined
+systemUsbEnumerationStatusGet = error "Not implemented yet."
 
 systemWhitelistAppend :: a
-systemWhitelistAppend = undefined
+systemWhitelistAppend = error "Not implemented yet."
 
 systemWhitelistClear :: a
-systemWhitelistClear = undefined
+systemWhitelistClear = error "Not implemented yet."
 
 systemWhitelistRemove :: a
-systemWhitelistRemove = undefined
+systemWhitelistRemove = error "Not implemented yet."
 
 evtSystemBoot :: a
-evtSystemBoot = undefined
+evtSystemBoot = error "Not implemented yet."
 
 evtSystemEndpointWatermarkRx :: a
-evtSystemEndpointWatermarkRx = undefined
+evtSystemEndpointWatermarkRx = error "Not implemented yet."
 
 evtSystemEndpointWatermarkTx :: a
-evtSystemEndpointWatermarkTx = undefined
+evtSystemEndpointWatermarkTx = error "Not implemented yet."
 
 evtSystemNoLicenseKey :: a
-evtSystemNoLicenseKey = undefined
+evtSystemNoLicenseKey = error "Not implemented yet."
 
 -- Event handler for protocol errors
 evtSystemProtocolError :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env) => (BGAPIError -> IO Bool) -> m ThreadId
 evtSystemProtocolError handler = registerEventHandler BgMsgEvent BgBlue BgClsSystem 0x06 handler
 
 evtSystemScriptFailure :: a
-evtSystemScriptFailure = undefined
+evtSystemScriptFailure = error "Not implemented yet."
 
 evtSystemUsbEnumerated :: a
-evtSystemUsbEnumerated = undefined
+evtSystemUsbEnumerated = error "Not implemented yet."
 
 -----------------------------------------------------------------------
 -- Testing
 -----------------------------------------------------------------------
 
 testChannelMode :: a
-testChannelMode = undefined
+testChannelMode = error "Not implemented yet."
 
 testGetChannelMap :: a
-testGetChannelMap = undefined
+testGetChannelMap = error "Not implemented yet."
 
 testPhyEnd :: a
-testPhyEnd = undefined
+testPhyEnd = error "Not implemented yet."
 
 testPhyRx :: a
-testPhyRx = undefined
+testPhyRx = error "Not implemented yet."
 
 testPhyTx :: a
-testPhyTx = undefined
+testPhyTx = error "Not implemented yet."
 
 -----------------------------------------------------------------------
 -- Device Firmware Upgrade
 -----------------------------------------------------------------------
 
 dfuFlashSetAddress :: a
-dfuFlashSetAddress = undefined
+dfuFlashSetAddress = error "Not implemented yet."
 
 dfuFlashUpload :: a
-dfuFlashUpload = undefined
+dfuFlashUpload = error "Not implemented yet."
 
 dfuFlashUploadFinish :: a
-dfuFlashUploadFinish = undefined
+dfuFlashUploadFinish = error "Not implemented yet."
 
 dfuReset :: a
-dfuReset = undefined
+dfuReset = error "Not implemented yet."
 
 evtDfuBoot :: a
-evtDfuBoot = undefined
+evtDfuBoot = error "Not implemented yet."

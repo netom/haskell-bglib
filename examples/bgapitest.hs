@@ -7,14 +7,20 @@ import           Control.Concurrent.STM
 import           Control.Monad.IO.Class
 import           Control.Monad.Reader
 import qualified Data.ByteString.Char8 as BSS
-import           System.Environment
+import           Data.Semigroup ((<>))
+import           Options.Applicative
 import           System.Exit
 import           System.Hardware.Serialport
 
+data AppOptions = AppOptions
+    { appOptSerialPort :: String
+    , appOptDebug      :: Bool
+    }
+
 data App = App
-    { appSerialPort :: SerialPort
-    , appBGChan     :: TChan BgPacket
-    , appDebug      :: Bool
+    { appOptions :: AppOptions
+    , appSerialPort :: SerialPort
+    , appBGChan  :: TChan BgPacket
     }
 
 instance HasSerialPort App where
@@ -24,23 +30,37 @@ instance HasBGChan App where
     getBGChan = appBGChan
 
 instance HasDebug App where
-    getDebug = appDebug
+    getDebug = appOptDebug . appOptions
+
+optParser :: Parser AppOptions
+optParser = AppOptions
+        <$> argument str 
+            (  metavar "PORT"
+            <> help "Serial port" )
+        <*> switch
+            ( long "debug"
+            <> short 'd'
+            <> help "Whether to be quiet" )
 
 execApp :: env -> ReaderT env m a -> m a
 execApp = flip runReaderT
 
 main :: IO ()
 main = do
-    args <- getArgs
-
-    port <- if length args == 1
-        then return $ head args
-        else die "Usage: bgapitest <serial port>"
+    appOpts <- execParser $
+        info
+            ( optParser <**> helper )
+            (  fullDesc
+            <> progDesc "Execute a short battery of test on port PORT"
+            <> header "bgapitest - a short text / example for haskell-bglib"
+            )
 
     app <- App
-        <$> ( openSerial port $ SerialPortSettings CS115200 8 One NoParity NoFlowControl 1000 )
-        <*> ( atomically newBroadcastTChan )
-        <*> return True
+        <$> return appOpts
+        <*> openSerial
+            (appOptSerialPort appOpts)
+            (SerialPortSettings CS115200 8 One NoParity NoFlowControl 1000)
+        <*> atomically newBroadcastTChan
 
     execApp app $ do
         -- Register an event handler for protocol errors.

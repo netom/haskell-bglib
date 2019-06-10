@@ -234,6 +234,18 @@ registerEventHandler mt tt cc cid handler = do
             continue <- handler $ decode $ BSL.fromStrict $ fromBgPayload $ bgpPayload
             if continue then go chan else return ()
 
+curry3 :: ((a, b, c) -> d) -> a -> b -> c -> d
+curry3 func a b c = func (a, b, c)
+
+curry4 :: ((a, b, c, d) -> e) -> a -> b -> c -> d -> e
+curry4 func a b c d = func (a, b, c, d)
+
+curry5 :: ((a, b, c, d, e) -> f) -> a -> b -> c -> d -> e -> f
+curry5 func a b c d e = func (a, b, c, d, e)
+
+curry6 :: ((a, b, c, d, e, f) -> g) -> a -> b -> c -> d -> e -> f -> g
+curry6 func a b c d e f = func (a, b, c, d, e, f)
+
 -----------------------------------------------------------------------
 -- Attribute Client
 -----------------------------------------------------------------------
@@ -242,59 +254,93 @@ registerEventHandler mt tt cc cid handler = do
 
 attclientAttributeWrite
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => Connection -> Attribute -> UInt8Array -> m (Connection, BGResult)
-attclientAttributeWrite conn attr dta = xCmd BgMsgCR BgBlue BgClsAttributeClient 0x05 (conn, attr, dta)
+    => UInt8 -> UInt16 -> UInt8Array -> m (UInt8, BGResult)
+attclientAttributeWrite = curry3 $ xCmd BgMsgCR BgBlue BgClsAttributeClient 0x05
 
-attclientExecuteWrite :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => m ()
-attclientExecuteWrite = error "Not implemented yet."
+attclientExecuteWrite
+    :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
+    => UInt8 -> Bool -> m (UInt8, BGResult)
+attclientExecuteWrite = curry $ xCmd BgMsgCR BgBlue BgClsAttributeClient 0x0a
 
-attclientFindByTypeValue :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => m ()
-attclientFindByTypeValue = error "Not implemented yet."
+attclientFindByTypeValue
+    :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
+    => UInt8 -> UInt16 -> UInt16 -> UInt16 -> UInt8Array -> m (UInt8, BGResult)
+attclientFindByTypeValue = curry5 $ xCmd BgMsgCR BgBlue BgClsAttributeClient 0x00
 
-attclientFindInformation :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => m ()
-attclientFindInformation = error "Not implemented yet."
+attclientFindInformation
+    :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
+    => UInt8 -> UInt16 -> UInt16 -> m (UInt8, BGResult)
+attclientFindInformation = curry3 $ xCmd BgMsgCR BgBlue BgClsAttributeClient 0x03
 
-attclientIndicateConfirm :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => m ()
-attclientIndicateConfirm = error "Not implemented yet."
+attclientIndicateConfirm
+    :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
+    => UInt8 -> m BGResult
+attclientIndicateConfirm = xCmd BgMsgCR BgBlue BgClsAttributeClient 0x07
 
-attclientPrepareWrite :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => m ()
-attclientPrepareWrite = error "Not implemented yet."
+attclientPrepareWrite
+    :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
+    => UInt8 -> UInt16 -> UInt16 -> UInt8Array -> m (UInt8, BGResult)
+attclientPrepareWrite = curry4 $ xCmd BgMsgCR BgBlue BgClsAttributeClient 0x09
 
-attclientReadByGroupType :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => m ()
-attclientReadByGroupType = error "Not implemented yet."
+attclientReadByGroupType
+    :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
+    => UInt8 -> UInt16 -> UInt16 -> UInt8Array -> m (UInt8, BGResult)
+attclientReadByGroupType = curry4 $ xCmd BgMsgCR BgBlue BgClsAttributeClient 0x01
 
-attclientReadByHandle :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => m ()
-attclientReadByHandle = error "Not implemented yet."
+attclientReadByHandle
+    :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
+    => UInt8 -> UInt16 -> m (UInt8, BGResult)
+attclientReadByHandle = curry $ xCmd BgMsgCR BgBlue BgClsAttributeClient 0x04
 
-attclientReadByType :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => m ()
-attclientReadByType = error "Not implemented yet."
+attclientReadByType
+    :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
+    => UInt8 -> UInt16 -> UInt16 -> UInt8Array -> m (UInt8, BGResult)
+attclientReadByType = curry4 $ xCmd BgMsgCR BgBlue BgClsAttributeClient 0x02
 
-attclientReadLong :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => m ()
-attclientReadLong = error "Not implemented yet."
+attclientReadLong
+    :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
+    => UInt8 -> UInt16 -> m (UInt8, BGResult)
+attclientReadLong = curry $ xCmd BgMsgCR BgBlue BgClsAttributeClient 0x08
 
-attclientReadMultiple :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => m ()
-attclientReadMultiple = error "Not implemented yet."
+attclientReadMultiple
+    :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
+    => UInt8 -> UInt8Array -> m (UInt8, BGResult)
+attclientReadMultiple = curry $ xCmd BgMsgCR BgBlue BgClsAttributeClient 0x0b
 
-attclientWriteCommand :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => m ()
-attclientWriteCommand = error "Not implemented yet."
+attclientWriteCommand
+    :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
+    => UInt8 -> UInt16 -> UInt8Array -> m (UInt8, BGResult)
+attclientWriteCommand = curry3 $ xCmd BgMsgCR BgBlue BgClsAttributeClient 0x06
 
-evtAttclientAttributeValue :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => ((UInt8, UInt16, UInt8, UInt8Array) -> IO Bool) -> m ThreadId
-evtAttclientAttributeValue handler = registerEventHandler BgMsgEvent BgBlue BgClsAttributeClient 0x05 handler
+evtAttclientAttributeValue
+    :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
+    => ((UInt8, UInt16, UInt8, UInt8Array) -> IO Bool) -> m ThreadId
+evtAttclientAttributeValue = registerEventHandler BgMsgEvent BgBlue BgClsAttributeClient 0x05
 
-evtAttclientFindInformationFound :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => (a -> IO Bool) -> m ThreadId
-evtAttclientFindInformationFound = error "Not implemented yet."
+evtAttclientFindInformationFound
+    :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
+    => ((UInt8, UInt16, UInt8Array) -> IO Bool) -> m ThreadId
+evtAttclientFindInformationFound = registerEventHandler BgMsgEvent BgBlue BgClsAttributeClient 0x04
 
-evtAttclientGroupFound :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => (a -> IO Bool) -> m ThreadId
-evtAttclientGroupFound = error "Not implemented yet."
+evtAttclientGroupFound
+    :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
+    => ((UInt8, UInt16, UInt16, UInt8Array) -> IO Bool) -> m ThreadId
+evtAttclientGroupFound = registerEventHandler BgMsgEvent BgBlue BgClsAttributeClient 0x02
 
-evtAttclientIndicated :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => (a -> IO Bool) -> m ThreadId
-evtAttclientIndicated = error "Not implemented yet."
+evtAttclientIndicated
+    :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
+    => ((UInt8, UInt16) -> IO Bool) -> m ThreadId
+evtAttclientIndicated = registerEventHandler BgMsgEvent BgBlue BgClsAttributeClient 0x00
 
-evtAttclientProcedureCompleted :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => (a -> IO Bool) -> m ThreadId
-evtAttclientProcedureCompleted = error "Not implemented yet."
+evtAttclientProcedureCompleted
+    :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
+    => ((UInt8, BGResult, UInt16) -> IO Bool) -> m ThreadId
+evtAttclientProcedureCompleted = registerEventHandler BgMsgEvent BgBlue BgClsAttributeClient 0x01
 
-evtAttclientReadMultipleResponse :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => (a -> IO Bool) -> m ThreadId
-evtAttclientReadMultipleResponse = error "Not implemented yet."
+evtAttclientReadMultipleResponse
+    :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
+    => ((UInt8, UInt8Array) -> IO Bool) -> m ThreadId
+evtAttclientReadMultipleResponse = registerEventHandler BgMsgEvent BgBlue BgClsAttributeClient 0x06
 
 -----------------------------------------------------------------------
 -- Attribute Database
@@ -318,13 +364,13 @@ attributesUserWriteResponse = error "Not implemented yet."
 attributesWrite :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => m ()
 attributesWrite = error "Not implemented yet."
 
-evtAttributesStatus :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => (a -> IO Bool) -> m ThreadId
+evtAttributesStatus :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => (() -> IO Bool) -> m ThreadId
 evtAttributesStatus = error "Not implemented yet."
 
-evtAttributesUserReadRequest :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => (a -> IO Bool) -> m ThreadId
+evtAttributesUserReadRequest :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => (() -> IO Bool) -> m ThreadId
 evtAttributesUserReadRequest = error "Not implemented yet."
 
-evtAttributesValue :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => (a -> IO Bool) -> m ThreadId
+evtAttributesValue :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => (() -> IO Bool) -> m ThreadId
 evtAttributesValue = error "Not implemented yet."
 
 -----------------------------------------------------------------------
@@ -355,16 +401,16 @@ connectionUpdate = error "Not implemented yet."
 connectionVersionUpdate :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => m ()
 connectionVersionUpdate = error "Not implemented yet."
 
-evtConnectionDisconnected :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => (a -> IO Bool) -> m ThreadId
+evtConnectionDisconnected :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => (() -> IO Bool) -> m ThreadId
 evtConnectionDisconnected = error "Not implemented yet."
 
-evtConnectionFeatureInd :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => (a -> IO Bool) -> m ThreadId
+evtConnectionFeatureInd :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => (() -> IO Bool) -> m ThreadId
 evtConnectionFeatureInd = error "Not implemented yet."
 
-evtConnectionStatus :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => (a -> IO Bool) -> m ThreadId
+evtConnectionStatus :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => (() -> IO Bool) -> m ThreadId
 evtConnectionStatus = error "Not implemented yet."
 
-evtConnectionVersionInd :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => (a -> IO Bool) -> m ThreadId
+evtConnectionVersionInd :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => (() -> IO Bool) -> m ThreadId
 evtConnectionVersionInd = error "Not implemented yet."
 
 -----------------------------------------------------------------------
@@ -416,8 +462,10 @@ gapSetScanParameters :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGC
 gapSetScanParameters = error "Not implemented yet."
 
 -- Register an event handler for GAP scan responses
-evtGapScanResponse :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => ((Int8, UInt8, BdAddr, UInt8, UInt8, UInt8Array) -> IO Bool) -> m ThreadId
-evtGapScanResponse handler = registerEventHandler BgMsgEvent BgBlue BgClsGenericAccessProfile 0x00 handler
+evtGapScanResponse
+    :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
+    => ((Int8, UInt8, BdAddr, UInt8, UInt8, UInt8Array) -> IO Bool) -> m ThreadId
+evtGapScanResponse = registerEventHandler BgMsgEvent BgBlue BgClsGenericAccessProfile 0x00
 
 -----------------------------------------------------------------------
 -- Hardware
@@ -489,16 +537,16 @@ hardwareTimerComparator = error "Not implemented yet."
 hardwareUsbEnable :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => m ()
 hardwareUsbEnable = error "Not implemented yet."
 
-evtHardwareAdcResult :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => (a -> IO Bool) -> m ThreadId
+evtHardwareAdcResult :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => (() -> IO Bool) -> m ThreadId
 evtHardwareAdcResult = error "Not implemented yet."
 
-evtHardwareAnalogComparatorStatus :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => (a -> IO Bool) -> m ThreadId
+evtHardwareAnalogComparatorStatus :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => (() -> IO Bool) -> m ThreadId
 evtHardwareAnalogComparatorStatus = error "Not implemented yet."
 
-evtHardwareIoPortStatus :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => (a -> IO Bool) -> m ThreadId
+evtHardwareIoPortStatus :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => (() -> IO Bool) -> m ThreadId
 evtHardwareIoPortStatus = error "Not implemented yet."
 
-evtHardwareSoftTimer :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => (a -> IO Bool) -> m ThreadId
+evtHardwareSoftTimer :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => (() -> IO Bool) -> m ThreadId
 evtHardwareSoftTimer = error "Not implemented yet."
 
 -----------------------------------------------------------------------
@@ -532,7 +580,7 @@ flashReadData = error "Not implemented yet."
 flashWriteData :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => m ()
 flashWriteData = error "Not implemented yet."
 
-evtFlashPsKey :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => (a -> IO Bool) -> m ThreadId
+evtFlashPsKey :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => (() -> IO Bool) -> m ThreadId
 evtFlashPsKey = error "Not implemented yet."
 
 -----------------------------------------------------------------------
@@ -566,16 +614,16 @@ smSetParameters = error "Not implemented yet."
 smWhitelistBonds :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => m ()
 smWhitelistBonds = error "Not implemented yet."
 
-evtSmBondingFail :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => (a -> IO Bool) -> m ThreadId
+evtSmBondingFail :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => (() -> IO Bool) -> m ThreadId
 evtSmBondingFail = error "Not implemented yet."
 
-evtSmBondStatus :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => (a -> IO Bool) -> m ThreadId
+evtSmBondStatus :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => (() -> IO Bool) -> m ThreadId
 evtSmBondStatus = error "Not implemented yet."
 
-evtSmPasskeyDisplay :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => (a -> IO Bool) -> m ThreadId
+evtSmPasskeyDisplay :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => (() -> IO Bool) -> m ThreadId
 evtSmPasskeyDisplay = error "Not implemented yet."
 
-evtSmPasskeyRequest :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => (a -> IO Bool) -> m ThreadId
+evtSmPasskeyRequest :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => (() -> IO Bool) -> m ThreadId
 evtSmPasskeyRequest = error "Not implemented yet."
 
 -----------------------------------------------------------------------
@@ -644,26 +692,26 @@ systemWhitelistClear = error "Not implemented yet."
 systemWhitelistRemove :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => m ()
 systemWhitelistRemove = error "Not implemented yet."
 
-evtSystemBoot :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => (a -> IO Bool) -> m ThreadId
+evtSystemBoot :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => (() -> IO Bool) -> m ThreadId
 evtSystemBoot = error "Not implemented yet."
 
-evtSystemEndpointWatermarkRx :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => (a -> IO Bool) -> m ThreadId
+evtSystemEndpointWatermarkRx :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => (() -> IO Bool) -> m ThreadId
 evtSystemEndpointWatermarkRx = error "Not implemented yet."
 
-evtSystemEndpointWatermarkTx :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => (a -> IO Bool) -> m ThreadId
+evtSystemEndpointWatermarkTx :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => (() -> IO Bool) -> m ThreadId
 evtSystemEndpointWatermarkTx = error "Not implemented yet."
 
-evtSystemNoLicenseKey :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => (a -> IO Bool) -> m ThreadId
+evtSystemNoLicenseKey :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => (() -> IO Bool) -> m ThreadId
 evtSystemNoLicenseKey = error "Not implemented yet."
 
 -- Event handler for protocol errors
 evtSystemProtocolError :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => (BGResult -> IO Bool) -> m ThreadId
 evtSystemProtocolError handler = registerEventHandler BgMsgEvent BgBlue BgClsSystem 0x06 handler
 
-evtSystemScriptFailure :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => (a -> IO Bool) -> m ThreadId
+evtSystemScriptFailure :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => (() -> IO Bool) -> m ThreadId
 evtSystemScriptFailure = error "Not implemented yet."
 
-evtSystemUsbEnumerated :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => (a -> IO Bool) -> m ThreadId
+evtSystemUsbEnumerated :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => (() -> IO Bool) -> m ThreadId
 evtSystemUsbEnumerated = error "Not implemented yet."
 
 -----------------------------------------------------------------------
@@ -701,5 +749,5 @@ dfuFlashUploadFinish = error "Not implemented yet."
 dfuReset :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => m ()
 dfuReset = error "Not implemented yet."
 
-evtDfuBoot :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => (a -> IO Bool) -> m ThreadId
+evtDfuBoot :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env) => (() -> IO Bool) -> m ThreadId
 evtDfuBoot = error "Not implemented yet."

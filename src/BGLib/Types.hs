@@ -7,8 +7,6 @@ module BGLib.Types
     , UInt16
     , UInt32
     , UInt8Array(..)
-    , Connection
-    , Attribute
     , toUInt8Array
     , BdAddr(..)
     , BgMessageType(..)
@@ -92,12 +90,6 @@ type UInt32 = W.Word32
 
 -- uint8array     byte array, first byte is array size
 newtype UInt8Array = UInt8Array { fromUInt8Array :: BSS.ByteString } deriving (Show, IsString)
-
--- Connection handle
-type Connection = UInt8
-
--- Attribute handle
-type Attribute = UInt16
 
 toUInt8Array :: BSS.ByteString -> UInt8Array
 toUInt8Array s = UInt8Array s

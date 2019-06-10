@@ -7,6 +7,8 @@ module BGLib.Types
     , UInt16
     , UInt32
     , UInt8Array(..)
+    , Connection
+    , Attribute
     , toUInt8Array
     , BdAddr(..)
     , BgMessageType(..)
@@ -53,8 +55,7 @@ module BGLib.Types
     , fBKMasterId
     , SMIOCapabilities(..)
     , SystemEndpoint(..)
-    , BGAPIError(..)
-    , BluetoothError(..)
+    , BGResult(..)
     ) where
 
 import           Control.Concurrent.STM.TChan
@@ -66,6 +67,7 @@ import           Data.Binary.Put
 import           Data.Bits
 import qualified Data.ByteString as BSS
 import qualified Data.Int as I
+import           Data.String
 import qualified Data.Word as W
 import           Numeric
 import           System.Hardware.Serialport
@@ -84,7 +86,13 @@ type UInt16 = W.Word16
 type UInt32 = W.Word32
 
 -- uint8array     byte array, first byte is array size
-newtype UInt8Array = UInt8Array { fromUInt8Array :: BSS.ByteString }
+newtype UInt8Array = UInt8Array { fromUInt8Array :: BSS.ByteString } deriving (Show, IsString)
+
+-- Connection handle
+type Connection = UInt8
+
+-- Attribute handle
+type Attribute = UInt16
 
 toUInt8Array :: BSS.ByteString -> UInt8Array
 toUInt8Array s = UInt8Array s
@@ -548,57 +556,56 @@ instance Binary SystemEndpoint where
     get = do
         toEnum . fromIntegral <$> getWord8
 
--- TODO
--- BGAPI Errors
-data BGAPIError
-    = BGErrSuccess
+-- Operation result
+data BGResult
+    = BGRSuccess
     -- Invalid Parameter (0x0180)
     -- Command contained invalid parameter
-    | BGErrInvalidParameter
+    | BGRInvalidParameter
 
     -- Device in Wrong State (0x0181)
     -- Device is in wrong state to receive command
-    | BGErrWrongState
+    | BGRWrongState
 
     -- Out Of Memory (0x0182)
     -- Device has run out of memory
-    | BGErrOutOfMemory
+    | BGROutOfMemory
 
     -- Feature Not Implemented (0x0183)
     -- Feature is not implemented
-    | BGErrNotImplemented
+    | BGRNotImplemented
 
     -- Command Not Recognized (0x0184)
     -- Command was not recognized
-    | BGErrNotRecognized
+    | BGRNotRecognized
 
     -- Timeout (0x0185)
     -- Command or Procedure failed due to timeout
-    | BGErrTimeout
+    | BGRTimeout
 
     -- Not Connected (0x0186)
     -- Connection handle passed is to command is not a valid handle
-    | BGErrNotConnected
+    | BGRNotConnected
 
     -- Flow (0x0187)
     -- Command would cause either underflow or overflow error
-    | BGErrFlow
+    | BGRFlow
 
     -- User Attribute (0x0188)
     -- User attribute was accessed through API which is not supported
-    | BGErrUserAttribute
+    | BGRUserAttribute
 
     -- Invalid License Key (0x0189)
     -- No valid license key found
-    | BGErrInvalidLicenseKey
+    | BGRInvalidLicenseKey
 
     -- Command Too Long (0x018A)
     -- Command maximum length exceeded
-    | BGErrCommandTooLong
+    | BGRCommandTooLong
 
     -- Out of Bonds (0x018B)
     -- Bonding procedure can't be started because device has no space left for bond.
-    | BGErrOutOfBonds
+    | BGROutOfBonds
 
     -- Script Overflow (0x018C)
     -- Module was reset due to script stack overflow.
@@ -607,119 +614,71 @@ data BGAPIError
     -- generated right after system boot event.
     -- This feature works only with BLE SDK version 1.7.0 or newer that support script stack overflow
     -- detection mechanism. For this feature to work correctly update of bootloader is needed.
-    | BGErrScriptOverflow
-
-    -- An error unknown by this library.
-    -- Containts the received error code as an unsigned byte
-    | BGErrUnknown UInt16
-    deriving Show
-
-instance Binary BGAPIError where
-    put m = do
-        putWord16le $ case m of
-            BGErrSuccess           -> 0x0000
-            BGErrInvalidParameter  -> 0x0180
-            BGErrWrongState        -> 0x0181
-            BGErrOutOfMemory       -> 0x0182
-            BGErrNotImplemented    -> 0x0183
-            BGErrNotRecognized     -> 0x0184
-            BGErrTimeout           -> 0x0185
-            BGErrNotConnected      -> 0x0186
-            BGErrFlow              -> 0x0187
-            BGErrUserAttribute     -> 0x0188
-            BGErrInvalidLicenseKey -> 0x0189
-            BGErrCommandTooLong    -> 0x018A
-            BGErrOutOfBonds        -> 0x018B
-            BGErrScriptOverflow    -> 0x018C
-            BGErrUnknown errC      -> errC
-    get = do
-        errC <- getWord16le
-        return $ case errC of
-            0x0000 -> BGErrSuccess
-            0x0180 -> BGErrInvalidParameter
-            0x0181 -> BGErrWrongState
-            0x0182 -> BGErrOutOfMemory
-            0x0183 -> BGErrNotImplemented
-            0x0184 -> BGErrNotRecognized
-            0x0185 -> BGErrTimeout
-            0x0186 -> BGErrNotConnected
-            0x0187 -> BGErrFlow
-            0x0188 -> BGErrUserAttribute
-            0x0189 -> BGErrInvalidLicenseKey
-            0x018A -> BGErrCommandTooLong
-            0x018B -> BGErrOutOfBonds
-            0x018C -> BGErrScriptOverflow
-            _     -> BGErrUnknown errC
-
--- Bluetooth errors
-
-data BluetoothError
-    -- Success (0x0000)
-    = BLErrSuccess
+    | BGRScriptOverflow
 
     -- Authentication Failure (0x0205)
     -- Pairing or authentication failed due to incorrect results in the pairing or authentication procedure. This could be
     -- due to an incorrect PIN or Link Key
-    | BLErrAuthenticationFailure
+    | BGRAuthenticationFailure
 
     -- Pin or Key Missing (0x0206)
     -- Pairing failed because of missing PIN, or authentication failed because of missing Key.
     -- Silicon Labs
-    | BLErrPinOrKeyMissing
+    | BGRPinOrKeyMissing
 
     -- Memory Capacity Exceeded (0x0207)
     -- Controller is out of memory.
-    | BLErrMemoryCapacityExceeded
+    | BGRMemoryCapacityExceeded
 
     -- Connection Timeout (0x0208)
     -- Link supervision timeout has expired.
-    | BLErrConnectionTimeout
+    | BGRConnectionTimeout
 
     -- Connection Limit Exceeded (0x0209)
     -- Controller is at limit of connections it can support.
-    | BLErrConnectionLimitExceeded
+    | BGRConnectionLimitExceeded
 
     -- Command Disallowed (0x020C)
     -- Command requested cannot be executed because the Controller is in a state where it cannot process this
     -- command at this time.
-    | BLErrCommandDisallowed
+    | BGRCommandDisallowed
 
     -- Invalid Command Parameters (0x0212)
     -- Command contained invalid parameters.
-    | BLErrInvalidCommandParameters
+    | BGRInvalidCommandParameters
 
     -- Remote User Terminated Connection (0x0213)
     -- User on the remote device terminated the connection.
-    | BLErrRemoteUserTerminatedConnection
+    | BGRRemoteUserTerminatedConnection
 
     -- Connection Terminated by Local Host (0x0216)
     -- Local device terminated the connection.
-    | BLErrConnectionTErminagedByLocalHost
+    | BGRConnectionTErminagedByLocalHost
 
     -- LL Response Timeout (0x0222)
     -- Connection terminated due to link-layer procedure timeout.
-    | BLErrLLResponseTimeout
+    | BGRLLResponseTimeout
 
     -- LL Instant Passed (0x0228)
     -- Received link-layer control packet where instant was in the past.
-    | BLErrLLInstantPassed
+    | BGRLLInstantPassed
 
     -- Controller Busy (0x023A)
     -- Operation was rejected because the controller is busy and unable to process the request.
-    | BLErrControllerBusy
+    | BGRControllerBusy
 
     -- Unacceptable Connection Interval (0x023B)
     -- The Unacceptable Connection Interval error code indicates that the remote device terminated the connection
     -- because of an unacceptable connection interval.
-    | BLErrUnacceptableConnectionInterval
+    | BGRUnacceptableConnectionInterval
 
     -- Directed Advertising Timeout (0x023C)
     -- Directed advertising completed without a connection being created.
-    | BLErrDirectedAdvertisingTimeout
+    | BGRDirectedAdvertisingTimeout
 
     -- MIC Failure (0x023D)
     -- Connection was terminated because the Message Integrity Check (MIC) failed on a received packet.
-    | BLErrMICFailure
+    | BGRMICFailure
 
     -- Connection Failed to be Established (0x023E)
     -- LL initiated a connection but the connection has failed to be established. Controller did not receive any packets
@@ -732,227 +691,253 @@ data BluetoothError
     -- from slave.) If the master does not receive anything by the time its 6 packets are sent, connection establishment
     -- will be considered failed and this error will be reported to the host or to the BGScript. In a busy environment it is
     -- normal to see roughly 1-2% error rate when opening connections.
-    | BLErrConnectionFailedToBeEstablised
+    | BGRConnectionFailedToBeEstablised
 
     -- Passkey Entry Failed (0x0301)
     -- The user input of passkey failed, for example, the user cancelled the operation
-    | BLErrPasskeyEntryFailed
+    | BGRPasskeyEntryFailed
 
     -- OOB Data is not available (0x0302)
     -- Out of Band data is not available for authentication
-    | BLErrOOBDataIsNotAvailable
+    | BGROOBDataIsNotAvailable
 
     -- Authentication Requirements (0x0303)
     -- The pairing procedure cannot be performed as authentication requirements cannot be met due to IO capabilities
     -- of one or both devices
-    | BLErrAuthenticationRequirements
+    | BGRAuthenticationRequirements
 
     -- Confirm Value Failed (0x0304)
     -- The confirm value does not match the calculated compare value
-    | BLErrConfirmValueFailed
+    | BGRConfirmValueFailed
 
     -- Pairing Not Supported (0x0305)
     -- Pairing is not supported by the device
-    | BLErrPairingNotSupported
+    | BGRPairingNotSupported
 
     -- Encryption Key Size (0x0306)
     -- The resultant encryption key size is insufficient for the security requirements of this device
-    | BLErrEncryptionKeySize
+    | BGREncryptionKeySize
 
     -- Command Not Supported (0x0307)
     -- The SMP command received is not supported on this device
-    | BLErrCommandNotSupported
+    | BGRCommandNotSupported
 
     -- Unspecified Reason (0x0308)
     -- Pairing failed due to an unspecified reason
-    | BLErrUnspecifiedReason
+    | BGRUnspecifiedReason
 
     -- Repeated Attempts (0x0309)
     -- Pairing or authentication procedure is disallowed because too little time has elapsed since last pairing request
     -- or security request
-    | BLErrRepeatedAttempts
+    | BGRRepeatedAttempts
 
     -- Invalid Parameters (0x030A)
     -- The Invalid Parameters error code indicates: the command length is invalid or a parameter is outside of the
     -- specified range.
-    | BLErrInvalidParameters
+    | BGRInvalidParameters
 
     -- Invalid Handle (0x0401)
     -- The attribute handle given was not valid on this server
-    | BLErrInvalidHandle
+    | BGRInvalidHandle
 
     -- Read Not Permitted (0x0402)
     -- The attribute cannot be read
-    | BLErrReadNotPermitted
+    | BGRReadNotPermitted
 
     -- Write Not Permitted (0x0403)
     -- The attribute cannot be written
-    | BLErrWriteNotPermitted
+    | BGRWriteNotPermitted
 
     -- Invalid PDU (0x0404)
     -- The attribute PDU was invalid
-    | BLErrInvalidPDU
+    | BGRInvalidPDU
 
     -- Insufficient Authentication (0x0405)
     -- The attribute requires authentication before it can be read or written.
-    | BLErrInsufficientAuthentication
+    | BGRInsufficientAuthentication
 
     -- Request Not Supported (0x0406)
     -- Attribute Server does not support the request received from the client.
-    | BLErrRequestNotSupported
+    | BGRRequestNotSupported
 
     -- Invalid Offset (0x0407)
     -- Offset specified was past the end of the attribute
-    | BLErrInvalidOffset
+    | BGRInvalidOffset
 
     -- Insufficient Authorization (0x0408)
     -- The attribute requires authorization before it can be read or written.
-    | BLErrInsufficientAuthorization
+    | BGRInsufficientAuthorization
 
     -- Prepare Queue Full (0x0409)
     -- Too many prepare writes have been queueud
-    | BLErrPrepareQueueFull
+    | BGRPrepareQueueFull
 
     -- Attribute Not Found (0x040A)
     -- No attribute found within the given attribute handle range.
-    | BLErrAttributeNotFound
+    | BGRAttributeNotFound
 
     -- Attribute Not Long (0x040B)
     -- The attribute cannot be read or written using the Read Blob Request
-    | BLErrAttributeNotLong
+    | BGRAttributeNotLong
 
     -- Insufficient Encryption Key Size (0x040C)
     -- The Encryption Key Size used for encrypting this link is insufficient.
-    | BLErrInsufficientEncryptionKeySize
+    | BGRInsufficientEncryptionKeySize
 
     -- Invalid Attribute Value Length (0x040D)
     -- The attribute value length is invalid for the operation
-    | BLErrInvalidAttributeValueLength
+    | BGRInvalidAttributeValueLength
 
     -- Unlikely Error (0x040E)
     -- The attribute request that was requested has encountered an error that was unlikely, and therefore could not be
     -- completed as requested.
-    | BLErrUnlikelyError
+    | BGRUnlikelyError
 
     -- Insufficient Encryption (0x040F)
     -- The attribute requires encryption before it can be read or written.
-    | BLErrInsufficientEncryption
+    | BGRInsufficientEncryption
 
     -- Unsupported Group Type (0x0410)
     -- The attribute type is not a supported grouping attribute as defined by a higher layer specification.
-    | BLErrUnsupportedGroupType
+    | BGRUnsupportedGroupType
 
     -- Insufficient Resources (0x0411)
     -- Insufficient Resources to complete the request
-    | BLErrInsufficientResources
+    | BGRInsufficientResources
 
     -- Application Error Codes (0x0480)
     -- Application error code defined by a higher layer specification.
     -- The error code range 0x80-0x9F is reserved for application level errors.
-    | BLErrApplicationErrorCode UInt8
+    | BGRApplicationErrorCode UInt8
 
     -- And error code unknown by this library
-    | BLErrUnknown UInt16
+    | BGRUnknown UInt16
     deriving Show
 
-instance Binary BluetoothError where
+instance Binary BGResult where
     put m = do
         putWord16le $ case m of
-            BLErrSuccess                         -> 0x0000
-            BLErrAuthenticationFailure           -> 0x0205
-            BLErrPinOrKeyMissing                 -> 0x0206
-            BLErrMemoryCapacityExceeded          -> 0x0207
-            BLErrConnectionTimeout               -> 0x0208
-            BLErrConnectionLimitExceeded         -> 0x0209
-            BLErrCommandDisallowed               -> 0x020C
-            BLErrInvalidCommandParameters        -> 0x0212
-            BLErrRemoteUserTerminatedConnection  -> 0x0213
-            BLErrConnectionTErminagedByLocalHost -> 0x0216
-            BLErrLLResponseTimeout               -> 0x0222
-            BLErrLLInstantPassed                 -> 0x0228
-            BLErrControllerBusy                  -> 0x023A
-            BLErrUnacceptableConnectionInterval  -> 0x023B
-            BLErrDirectedAdvertisingTimeout      -> 0x023C
-            BLErrMICFailure                      -> 0x023D
-            BLErrConnectionFailedToBeEstablised  -> 0x023E
-            BLErrPasskeyEntryFailed              -> 0x0301
-            BLErrOOBDataIsNotAvailable           -> 0x0302
-            BLErrAuthenticationRequirements      -> 0x0303
-            BLErrConfirmValueFailed              -> 0x0304
-            BLErrPairingNotSupported             -> 0x0305
-            BLErrEncryptionKeySize               -> 0x0306
-            BLErrCommandNotSupported             -> 0x0307
-            BLErrUnspecifiedReason               -> 0x0308
-            BLErrRepeatedAttempts                -> 0x0309
-            BLErrInvalidParameters               -> 0x030A
-            BLErrInvalidHandle                   -> 0x0401
-            BLErrReadNotPermitted                -> 0x0402
-            BLErrWriteNotPermitted               -> 0x0403
-            BLErrInvalidPDU                      -> 0x0404
-            BLErrInsufficientAuthentication      -> 0x0405
-            BLErrRequestNotSupported             -> 0x0406
-            BLErrInvalidOffset                   -> 0x0407
-            BLErrInsufficientAuthorization       -> 0x0408
-            BLErrPrepareQueueFull                -> 0x0409
-            BLErrAttributeNotFound               -> 0x040A
-            BLErrAttributeNotLong                -> 0x040B
-            BLErrInsufficientEncryptionKeySize   -> 0x040C
-            BLErrInvalidAttributeValueLength     -> 0x040D
-            BLErrUnlikelyError                   -> 0x040E
-            BLErrInsufficientEncryption          -> 0x040F
-            BLErrUnsupportedGroupType            -> 0x0410
-            BLErrInsufficientResources           -> 0x0411
-            BLErrApplicationErrorCode errC       -> (fromIntegral errC .&. 0x001f) .|. 0x0480
-            BLErrUnknown errC                    -> errC
+            BGRSuccess                         -> 0x0000
+            BGRInvalidParameter                -> 0x0180
+            BGRWrongState                      -> 0x0181
+            BGROutOfMemory                     -> 0x0182
+            BGRNotImplemented                  -> 0x0183
+            BGRNotRecognized                   -> 0x0184
+            BGRTimeout                         -> 0x0185
+            BGRNotConnected                    -> 0x0186
+            BGRFlow                            -> 0x0187
+            BGRUserAttribute                   -> 0x0188
+            BGRInvalidLicenseKey               -> 0x0189
+            BGRCommandTooLong                  -> 0x018A
+            BGROutOfBonds                      -> 0x018B
+            BGRScriptOverflow                  -> 0x018C
+            BGRAuthenticationFailure           -> 0x0205
+            BGRPinOrKeyMissing                 -> 0x0206
+            BGRMemoryCapacityExceeded          -> 0x0207
+            BGRConnectionTimeout               -> 0x0208
+            BGRConnectionLimitExceeded         -> 0x0209
+            BGRCommandDisallowed               -> 0x020C
+            BGRInvalidCommandParameters        -> 0x0212
+            BGRRemoteUserTerminatedConnection  -> 0x0213
+            BGRConnectionTErminagedByLocalHost -> 0x0216
+            BGRLLResponseTimeout               -> 0x0222
+            BGRLLInstantPassed                 -> 0x0228
+            BGRControllerBusy                  -> 0x023A
+            BGRUnacceptableConnectionInterval  -> 0x023B
+            BGRDirectedAdvertisingTimeout      -> 0x023C
+            BGRMICFailure                      -> 0x023D
+            BGRConnectionFailedToBeEstablised  -> 0x023E
+            BGRPasskeyEntryFailed              -> 0x0301
+            BGROOBDataIsNotAvailable           -> 0x0302
+            BGRAuthenticationRequirements      -> 0x0303
+            BGRConfirmValueFailed              -> 0x0304
+            BGRPairingNotSupported             -> 0x0305
+            BGREncryptionKeySize               -> 0x0306
+            BGRCommandNotSupported             -> 0x0307
+            BGRUnspecifiedReason               -> 0x0308
+            BGRRepeatedAttempts                -> 0x0309
+            BGRInvalidParameters               -> 0x030A
+            BGRInvalidHandle                   -> 0x0401
+            BGRReadNotPermitted                -> 0x0402
+            BGRWriteNotPermitted               -> 0x0403
+            BGRInvalidPDU                      -> 0x0404
+            BGRInsufficientAuthentication      -> 0x0405
+            BGRRequestNotSupported             -> 0x0406
+            BGRInvalidOffset                   -> 0x0407
+            BGRInsufficientAuthorization       -> 0x0408
+            BGRPrepareQueueFull                -> 0x0409
+            BGRAttributeNotFound               -> 0x040A
+            BGRAttributeNotLong                -> 0x040B
+            BGRInsufficientEncryptionKeySize   -> 0x040C
+            BGRInvalidAttributeValueLength     -> 0x040D
+            BGRUnlikelyError                   -> 0x040E
+            BGRInsufficientEncryption          -> 0x040F
+            BGRUnsupportedGroupType            -> 0x0410
+            BGRInsufficientResources           -> 0x0411
+            BGRApplicationErrorCode errC       -> (fromIntegral errC .&. 0x001f) .|. 0x0480
+            BGRUnknown errC                    -> errC
 
     get = do
         errC <- getWord16le
         return $ case errC of
-            0x0000 -> BLErrSuccess
-            0x0205 -> BLErrAuthenticationFailure
-            0x0206 -> BLErrPinOrKeyMissing
-            0x0207 -> BLErrMemoryCapacityExceeded
-            0x0208 -> BLErrConnectionTimeout
-            0x0209 -> BLErrConnectionLimitExceeded
-            0x020C -> BLErrCommandDisallowed
-            0x0212 -> BLErrInvalidCommandParameters
-            0x0213 -> BLErrRemoteUserTerminatedConnection
-            0x0216 -> BLErrConnectionTErminagedByLocalHost
-            0x0222 -> BLErrLLResponseTimeout
-            0x0228 -> BLErrLLInstantPassed
-            0x023A -> BLErrControllerBusy
-            0x023B -> BLErrUnacceptableConnectionInterval
-            0x023C -> BLErrDirectedAdvertisingTimeout
-            0x023D -> BLErrMICFailure
-            0x023E -> BLErrConnectionFailedToBeEstablised
-            0x0301 -> BLErrPasskeyEntryFailed
-            0x0302 -> BLErrOOBDataIsNotAvailable
-            0x0303 -> BLErrAuthenticationRequirements
-            0x0304 -> BLErrConfirmValueFailed
-            0x0305 -> BLErrPairingNotSupported
-            0x0306 -> BLErrEncryptionKeySize
-            0x0307 -> BLErrCommandNotSupported
-            0x0308 -> BLErrUnspecifiedReason
-            0x0309 -> BLErrRepeatedAttempts
-            0x030A -> BLErrInvalidParameters
-            0x0401 -> BLErrInvalidHandle
-            0x0402 -> BLErrReadNotPermitted
-            0x0403 -> BLErrWriteNotPermitted
-            0x0404 -> BLErrInvalidPDU
-            0x0405 -> BLErrInsufficientAuthentication
-            0x0406 -> BLErrRequestNotSupported
-            0x0407 -> BLErrInvalidOffset
-            0x0408 -> BLErrInsufficientAuthorization
-            0x0409 -> BLErrPrepareQueueFull
-            0x040A -> BLErrAttributeNotFound
-            0x040B -> BLErrAttributeNotLong
-            0x040C -> BLErrInsufficientEncryptionKeySize
-            0x040D -> BLErrInvalidAttributeValueLength
-            0x040E -> BLErrUnlikelyError
-            0x040F -> BLErrInsufficientEncryption
-            0x0410 -> BLErrUnsupportedGroupType
-            0x0411 -> BLErrInsufficientResources
+            0x0000 -> BGRSuccess
+            0x0180 -> BGRInvalidParameter
+            0x0181 -> BGRWrongState
+            0x0182 -> BGROutOfMemory
+            0x0183 -> BGRNotImplemented
+            0x0184 -> BGRNotRecognized
+            0x0185 -> BGRTimeout
+            0x0186 -> BGRNotConnected
+            0x0187 -> BGRFlow
+            0x0188 -> BGRUserAttribute
+            0x0189 -> BGRInvalidLicenseKey
+            0x018A -> BGRCommandTooLong
+            0x018B -> BGROutOfBonds
+            0x018C -> BGRScriptOverflow
+            0x0205 -> BGRAuthenticationFailure
+            0x0206 -> BGRPinOrKeyMissing
+            0x0207 -> BGRMemoryCapacityExceeded
+            0x0208 -> BGRConnectionTimeout
+            0x0209 -> BGRConnectionLimitExceeded
+            0x020C -> BGRCommandDisallowed
+            0x0212 -> BGRInvalidCommandParameters
+            0x0213 -> BGRRemoteUserTerminatedConnection
+            0x0216 -> BGRConnectionTErminagedByLocalHost
+            0x0222 -> BGRLLResponseTimeout
+            0x0228 -> BGRLLInstantPassed
+            0x023A -> BGRControllerBusy
+            0x023B -> BGRUnacceptableConnectionInterval
+            0x023C -> BGRDirectedAdvertisingTimeout
+            0x023D -> BGRMICFailure
+            0x023E -> BGRConnectionFailedToBeEstablised
+            0x0301 -> BGRPasskeyEntryFailed
+            0x0302 -> BGROOBDataIsNotAvailable
+            0x0303 -> BGRAuthenticationRequirements
+            0x0304 -> BGRConfirmValueFailed
+            0x0305 -> BGRPairingNotSupported
+            0x0306 -> BGREncryptionKeySize
+            0x0307 -> BGRCommandNotSupported
+            0x0308 -> BGRUnspecifiedReason
+            0x0309 -> BGRRepeatedAttempts
+            0x030A -> BGRInvalidParameters
+            0x0401 -> BGRInvalidHandle
+            0x0402 -> BGRReadNotPermitted
+            0x0403 -> BGRWriteNotPermitted
+            0x0404 -> BGRInvalidPDU
+            0x0405 -> BGRInsufficientAuthentication
+            0x0406 -> BGRRequestNotSupported
+            0x0407 -> BGRInvalidOffset
+            0x0408 -> BGRInsufficientAuthorization
+            0x0409 -> BGRPrepareQueueFull
+            0x040A -> BGRAttributeNotFound
+            0x040B -> BGRAttributeNotLong
+            0x040C -> BGRInsufficientEncryptionKeySize
+            0x040D -> BGRInvalidAttributeValueLength
+            0x040E -> BGRUnlikelyError
+            0x040F -> BGRInsufficientEncryption
+            0x0410 -> BGRUnsupportedGroupType
+            0x0411 -> BGRInsufficientResources
             _      ->
                 if errC >= 0x0480 && errC <= 0x049f
-                    then BLErrApplicationErrorCode $ fromIntegral (errC .&. 0x1f)
-                    else BLErrUnknown errC
+                    then BGRApplicationErrorCode $ fromIntegral (errC .&. 0x1f)
+                    else BGRUnknown errC

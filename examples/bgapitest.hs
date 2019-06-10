@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 import           BGLib.Commands
 import           BGLib.Types
 import           Control.Concurrent
@@ -46,6 +48,10 @@ main = do
 
         liftIO $ putStrLn "Running hello"
         systemHello
+        liftIO $ putStrLn ""
+
+        liftIO $ putStrLn "We should get a \"not connected\" error:"
+        attclientAttributeWrite 0 0 "e" >>= liftIO . print
         liftIO $ putStrLn ""
 
         liftIO $ putStrLn "Getting Bluetooth Address:"

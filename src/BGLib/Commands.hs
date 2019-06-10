@@ -707,53 +707,54 @@ evtHardwareSoftTimer
 
 flashErasePage
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-flashErasePage = error "Not implemented yet."
+    => UInt8 -> m BGResult
+flashErasePage = xCmd BgMsgCR BgBlue BgClsPersistentStore 0x06
 
 flashPsDefrag
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
     => m ()
-flashPsDefrag = error "Not implemented yet."
+flashPsDefrag = xCmd BgMsgCR BgBlue BgClsPersistentStore 0x00 ()
 
 flashPsDump
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
     => m ()
-flashPsDump = error "Not implemented yet."
+flashPsDump = xCmd BgMsgCR BgBlue BgClsPersistentStore 0x01 ()
 
 flashPsEraseAll
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
     => m ()
-flashPsEraseAll = error "Not implemented yet."
+flashPsEraseAll = xCmd BgMsgCR BgBlue BgClsPersistentStore 0x02 ()
 
 flashPsErase
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-flashPsErase = error "Not implemented yet."
+    => UInt16 -> m ()
+flashPsErase = xCmd BgMsgCR BgBlue BgClsPersistentStore 0x05
 
 flashPsLoad
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-flashPsLoad = error "Not implemented yet."
+    => UInt16 -> m (BGResult, UInt8Array)
+flashPsLoad = xCmd BgMsgCR BgBlue BgClsPersistentStore 0x04
 
 flashPsSave
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-flashPsSave = error "Not implemented yet."
+    => UInt16 -> UInt8Array -> m BGResult
+flashPsSave = curry $ xCmd BgMsgCR BgBlue BgClsPersistentStore 0x03
 
 flashReadData
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-flashReadData = error "Not implemented yet."
+    => UInt32 -> UInt8 -> m UInt8Array
+flashReadData = curry $ xCmd BgMsgCR BgBlue BgClsPersistentStore 0x08
 
 flashWriteData
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-flashWriteData = error "Not implemented yet."
+    => UInt32 -> UInt8Array -> m BGResult
+flashWriteData = curry $ xCmd BgMsgCR BgBlue BgClsPersistentStore 0x07
 
 evtFlashPsKey
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => (() -> IO Bool) -> m ThreadId
-evtFlashPsKey = error "Not implemented yet."
+    => (UInt16 -> UInt8Array -> IO Bool) -> m ThreadId
+evtFlashPsKey
+    = registerEventHandler BgMsgEvent BgBlue BgClsPersistentStore 0x00 . uncurry
 
 -----------------------------------------------------------------------
 -- Security Manager

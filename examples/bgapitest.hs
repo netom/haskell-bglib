@@ -13,7 +13,8 @@ import           System.Hardware.Serialport
 
 data App = App
     { appSerialPort :: SerialPort
-    , appBGChan :: TChan BgPacket
+    , appBGChan     :: TChan BgPacket
+    , appDebug      :: Bool
     }
 
 instance HasSerialPort App where
@@ -21,6 +22,9 @@ instance HasSerialPort App where
 
 instance HasBGChan App where
     getBGChan = appBGChan
+
+instance HasDebug App where
+    getDebug = appDebug
 
 execApp :: env -> ReaderT env m a -> m a
 execApp = flip runReaderT
@@ -36,6 +40,7 @@ main = do
     app <- App
         <$> ( openSerial port $ SerialPortSettings CS115200 8 One NoParity NoFlowControl 1000 )
         <*> ( atomically newBroadcastTChan )
+        <*> return True
 
     execApp app $ do
         -- Register an event handler for protocol errors.
@@ -66,7 +71,7 @@ main = do
         let plaintext = "This is plain"
         liftIO $ putStrLn $ "Encrypting: " ++ plaintext
         encrypted <- systemAesEncrypt $ toUInt8Array $ BSS.pack $ plaintext
-        liftIO $ putStrLn $ "Encrypted: " ++ prettyShowBS (fromUInt8Array encrypted)
+        liftIO $ putStrLn $ "Encrypted: " ++ bsShowHex (fromUInt8Array encrypted)
         liftIO $ putStrLn ""
 
         liftIO $ putStrLn $ "Decrypting"

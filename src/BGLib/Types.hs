@@ -16,13 +16,18 @@ module BGLib.Types
     , BgCommandClass(..)
     , BgPacketHeader(..)
     , bgHeaderMatches
+    , BgPayload
+    , fromBgPayload
+    , toBgPayload
     , BgPacket(..)
     , HasSerialPort(..)
     , askSerialPort
     , HasBGChan(..)
     , askBGChan
     , askDupBGChan
-    , prettyShowBS
+    , HasDebug(..)
+    , askDebug
+    , bsShowHex
     , RebootMode(..)
     , AttributeValueType(..)
     , AttributeChangeReason(..)
@@ -172,19 +177,27 @@ bgHeaderMatches mt tt cc cid BgPacketHeader{..}
     && cc  == bghCommandClass
     && cid == bghCommandId
 
+newtype BgPayload = BgPayload { fromBgPayload :: BSS.ByteString }
+
+toBgPayload :: BSS.ByteString -> BgPayload
+toBgPayload = BgPayload
+
+instance Show BgPayload where
+    show = bsShowHex . fromBgPayload
+
 data BgPacket = BgPacket
     { bgpHeader  :: BgPacketHeader
-    , bgpPayload :: BSS.ByteString
+    , bgpPayload :: BgPayload
     } deriving Show
 
 instance Binary BgPacket where
     put BgPacket{..} = do
         put bgpHeader
-        putByteString bgpPayload
+        putByteString $ fromBgPayload bgpPayload
 
     get = do
         bgpHeader@BgPacketHeader{..} <- get
-        bgpPayload <- getByteString $ fromIntegral bghLength
+        bgpPayload <- toBgPayload <$> getByteString (fromIntegral bghLength)
         return BgPacket{..}
 
 class HasSerialPort env where
@@ -198,14 +211,20 @@ class HasBGChan env where
 
 askBGChan :: (MonadReader env m, HasBGChan env) => m (TChan BgPacket)
 askBGChan = getBGChan <$> ask
-    
+
 askDupBGChan :: (MonadIO m, MonadReader env m, HasBGChan env) => m (TChan BgPacket)
 askDupBGChan = do
     chan <- getBGChan <$> ask
     liftIO $ atomically $ dupTChan chan
 
-prettyShowBS :: BSS.ByteString -> String
-prettyShowBS = concatMap (\n -> ' ' : showHex n "") . BSS.unpack
+class HasDebug env where
+    getDebug :: env -> Bool
+
+askDebug :: (MonadReader env m, HasDebug env) => m (Bool)
+askDebug = getDebug <$> ask
+
+bsShowHex :: BSS.ByteString -> String
+bsShowHex = concatMap (\n -> ' ' : showHex n "") . BSS.unpack
 
 data RebootMode
     -- Reboot into application

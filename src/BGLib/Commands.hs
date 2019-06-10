@@ -252,11 +252,11 @@ curry5 func a b c d e = func (a, b, c, d, e)
 uncurry5 :: (a -> b -> c -> d -> e -> f) -> (a, b, c, d, e) -> f
 uncurry5 func (a, b, c, d, e) = func a b c d e
 
-curry6 :: ((a, b, c, d, e, f) -> g) -> a -> b -> c -> d -> e -> f -> g
-curry6 func a b c d e f = func (a, b, c, d, e, f)
-
 uncurry6 :: (a -> b -> c -> d -> e -> f -> g) -> (a, b, c, d, e, f) -> g
 uncurry6 func (a, b, c, d, e, f) = func a b c d e f
+
+uncurry8 :: (a -> b -> c -> d -> e -> f -> g -> h -> i) -> (a, b, c, d, e, f, g, h) -> i
+uncurry8 func (a, b, c, d, e, f, g, h) = func a b c d e f g h
 
 -----------------------------------------------------------------------
 -- Attribute Client
@@ -398,19 +398,19 @@ evtAttributesStatus
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
     => (UInt16 -> UInt8 -> IO Bool) -> m ThreadId
 evtAttributesStatus
-    = registerEventHandler BgMsgEvent BgBlue BgClsAttributeClient 0x02 . uncurry
+    = registerEventHandler BgMsgEvent BgBlue BgClsAttributeDatabase 0x02 . uncurry
 
 evtAttributesUserReadRequest
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
     => (UInt8 -> UInt16 -> UInt16 -> UInt8 -> IO Bool) -> m ThreadId
 evtAttributesUserReadRequest
-    = registerEventHandler BgMsgEvent BgBlue BgClsAttributeClient 0x01 . uncurry4
+    = registerEventHandler BgMsgEvent BgBlue BgClsAttributeDatabase 0x01 . uncurry4
 
 evtAttributesValue
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
     => (UInt8 -> UInt8 -> UInt16 -> UInt16 -> UInt8Array -> IO Bool) -> m ThreadId
 evtAttributesValue
-    = registerEventHandler BgMsgEvent BgBlue BgClsAttributeClient 0x00 . uncurry5
+    = registerEventHandler BgMsgEvent BgBlue BgClsAttributeDatabase 0x00 . uncurry5
 
 -----------------------------------------------------------------------
 -- Connection
@@ -418,63 +418,65 @@ evtAttributesValue
 
 connectionChannelMapGet
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-connectionChannelMapGet = error "Not implemented yet."
+    => UInt8 -> m (UInt8, UInt8Array)
+connectionChannelMapGet = xCmd BgMsgCR BgBlue BgClsConnection 0x04
 
 connectionChannelMapSet
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-connectionChannelMapSet = error "Not implemented yet."
+    => UInt8 -> UInt8Array -> m (UInt8, BGResult)
+connectionChannelMapSet = curry $ xCmd BgMsgCR BgBlue BgClsConnection 0x05
 
 connectionDisconnect
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-connectionDisconnect = error "Not implemented yet."
+    => UInt8 -> m (UInt8, BGResult)
+connectionDisconnect = xCmd BgMsgCR BgBlue BgClsConnection 0x00
 
 connectionGetRssi
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-connectionGetRssi = error "Not implemented yet."
+    => UInt8 -> m (UInt8, Int8)
+connectionGetRssi = xCmd BgMsgCR BgBlue BgClsConnection 0x01
 
 connectionGetStatus
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-connectionGetStatus = error "Not implemented yet."
+    => UInt8 -> m UInt8
+connectionGetStatus = xCmd BgMsgCR BgBlue BgClsConnection 0x07
 
 connectionSlaveLatencyDisable
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-connectionSlaveLatencyDisable = error "Not implemented yet."
+    => UInt8 -> m BGResult
+connectionSlaveLatencyDisable = xCmd BgMsgCR BgBlue BgClsConnection 0x09
 
 connectionUpdate
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-connectionUpdate = error "Not implemented yet."
+    => UInt8 -> UInt16 -> UInt16 -> UInt16 -> UInt16 -> m (UInt8, BGResult)
+connectionUpdate = curry5 $ xCmd BgMsgCR BgBlue BgClsConnection 0x02
 
 connectionVersionUpdate
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-connectionVersionUpdate = error "Not implemented yet."
+    => UInt8 -> m (UInt8, BGResult)
+connectionVersionUpdate = xCmd BgMsgCR BgBlue BgClsConnection 0x03
 
 evtConnectionDisconnected
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => (() -> IO Bool) -> m ThreadId
-evtConnectionDisconnected = error "Not implemented yet."
+    => (UInt8 -> BGResult -> IO Bool) -> m ThreadId
+evtConnectionDisconnected
+    = registerEventHandler BgMsgEvent BgBlue BgClsConnection 0x04 . uncurry
 
 evtConnectionFeatureInd
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => (() -> IO Bool) -> m ThreadId
-evtConnectionFeatureInd = error "Not implemented yet."
+    => (UInt8 -> UInt8Array -> IO Bool) -> m ThreadId
+evtConnectionFeatureInd = registerEventHandler BgMsgEvent BgBlue BgClsConnection 0x02 . uncurry
 
 evtConnectionStatus
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => (() -> IO Bool) -> m ThreadId
-evtConnectionStatus = error "Not implemented yet."
+    => (UInt8 -> UInt8 -> BdAddr -> UInt8 -> UInt16 -> UInt16 -> UInt16 -> UInt8 -> IO Bool)
+    -> m ThreadId
+evtConnectionStatus = registerEventHandler BgMsgEvent BgBlue BgClsConnection 0x00 . uncurry8
 
 evtConnectionVersionInd
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => (() -> IO Bool) -> m ThreadId
-evtConnectionVersionInd = error "Not implemented yet."
+    => (UInt8 -> UInt8 -> UInt16 -> UInt16 -> IO Bool) -> m ThreadId
+evtConnectionVersionInd = registerEventHandler BgMsgEvent BgBlue BgClsConnection 0x01 . uncurry4
 
 -----------------------------------------------------------------------
 -- Generic Access Profile

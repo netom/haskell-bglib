@@ -252,6 +252,9 @@ curry5 func a b c d e = func (a, b, c, d, e)
 uncurry5 :: (a -> b -> c -> d -> e -> f) -> (a, b, c, d, e) -> f
 uncurry5 func (a, b, c, d, e) = func a b c d e
 
+curry6 :: ((a, b, c, d, e, f) -> g) -> a -> b -> c -> d -> e -> f -> g
+curry6 func a b c d e f = func (a, b, c, d, e, f)
+
 uncurry6 :: (a -> b -> c -> d -> e -> f -> g) -> (a, b, c, d, e, f) -> g
 uncurry6 func (a, b, c, d, e, f) = func a b c d e f
 
@@ -484,24 +487,19 @@ evtConnectionVersionInd = registerEventHandler BgMsgEvent BgBlue BgClsConnection
 
 gapConnectDirect
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-gapConnectDirect = error "Not implemented yet."
+    => BdAddr -> GapAddressType -> UInt16 -> UInt16 -> UInt16 -> UInt16 -> m (BGResult, UInt8)
+gapConnectDirect = curry6 $ xCmd BgMsgCR BgBlue BgClsGenericAccessProfile 0x03
 
 gapConnectSelective
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-gapConnectSelective = error "Not implemented yet."
+    => UInt16 -> UInt16 -> UInt16 -> UInt16 -> m (BGResult, UInt8)
+gapConnectSelective = curry4 $ xCmd BgMsgCR BgBlue BgClsGenericAccessProfile 0x05
 
--- This command starts the GAP discovery procedure to scan for advertising devices i.e. to perform a device
--- discovery.
--- Scanning parameters can be configured with the Set Scan Parameters command before issuing this command.
--- To cancel on an ongoing discovery process use the End Procedure command.
 gapDiscover
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
     => GapDiscoverMode -> m UInt16
 gapDiscover = xCmd BgMsgCR BgBlue BgClsGenericAccessProfile 0x02
 
--- This command ends the current GAP discovery procedure and stop the scanning of advertising devices.
 gapEndProcedure
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
     => m UInt16
@@ -509,48 +507,48 @@ gapEndProcedure = xCmd BgMsgCR BgBlue BgClsGenericAccessProfile 0x04 ()
 
 gapSetAdvData
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-gapSetAdvData = error "Not implemented yet."
+    => UInt8 -> UInt8Array -> m BGResult
+gapSetAdvData = curry $ xCmd BgMsgCR BgBlue BgClsGenericAccessProfile 0x09
 
 gapSetAdvParameters
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-gapSetAdvParameters = error "Not implemented yet."
+    => UInt16 -> UInt16 -> UInt8 -> m BGResult
+gapSetAdvParameters = curry3 $ xCmd BgMsgCR BgBlue BgClsGenericAccessProfile 0x08
 
 gapSetDirectedConnectableMode
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-gapSetDirectedConnectableMode = error "Not implemented yet."
+    => BdAddr -> GapAddressType -> m BGResult
+gapSetDirectedConnectableMode = curry $ xCmd BgMsgCR BgBlue BgClsGenericAccessProfile 0x0a
 
 gapSetFiltering
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-gapSetFiltering = error "Not implemented yet."
+    => GapScanPolicy -> GapAdvPolicy -> UInt8 -> m BGResult
+gapSetFiltering = curry3 $ xCmd BgMsgCR BgBlue BgClsGenericAccessProfile 0x06
 
 gapSetInitiatingConParameters
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-gapSetInitiatingConParameters = error "Not implemented yet."
+    => UInt16 -> UInt16 -> m BGResult
+gapSetInitiatingConParameters = curry $ xCmd BgMsgCR BgBlue BgClsGenericAccessProfile 0x0b
 
 gapSetMode
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-gapSetMode = error "Not implemented yet."
+    => GapDiscoverableMode -> GapConnectableMode -> m BGResult
+gapSetMode = curry $ xCmd BgMsgCR BgBlue BgClsGenericAccessProfile 0x01
 
 gapSetNonresolvableAddress
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-gapSetNonresolvableAddress = error "Not implemented yet."
+    => BdAddr -> m BGResult
+gapSetNonresolvableAddress = xCmd BgMsgCR BgBlue BgClsGenericAccessProfile 0x0c
 
 gapSetPrivacyFlags
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-gapSetPrivacyFlags = error "Not implemented yet."
+    => UInt8 -> UInt8 -> m ()
+gapSetPrivacyFlags = curry $ xCmd BgMsgCR BgBlue BgClsGenericAccessProfile 0x00
 
 gapSetScanParameters
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-gapSetScanParameters = error "Not implemented yet."
+    => UInt16 -> UInt16 -> UInt8 -> m BGResult
+gapSetScanParameters = curry3 $ xCmd BgMsgCR BgBlue BgClsGenericAccessProfile 0x07
 
 -- Register an event handler for GAP scan responses
 evtGapScanResponse

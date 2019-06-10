@@ -41,14 +41,14 @@ module BGLib.Types
     , fADSimultaneousLEBREDRCtrl
     , fADSimultaneousLEBREDRHost
     , fADMask
-    , ADType(..)
-    , AdPolicy(..)
-    , BluetoothAddressType(..)
-    , GAPConnectableMode(..)
-    , GAPDiscoverableMode(..)
+    , GapAdvType(..)
+    , GapAdvPolicy(..)
+    , GapAddressType(..)
+    , GapConnectableMode(..)
+    , GapDiscoverableMode(..)
     , GapDiscoverMode(..)
     , GSPScanHeaderFlag(..)
-    , ScanPolicy(..)
+    , GapScanPolicy(..)
     , fBKLTK
     , fBKAddrPublic
     , fBKAddrStatic
@@ -328,60 +328,60 @@ fADSimultaneousLEBREDRHost = 0x20
 fADMask :: UInt8
 fADMask = 0x1f
 
-data ADType
-    = ADTNone
-    | ADTFlags
-    | ADTServices16bitMore
-    | ADTServices16bitAll
-    | ADTServices32bitMore
-    | ADTServices32bitAll
-    | ADTServices128bitMore
-    | ADTServices128bitAll
-    | ADTLocalnameShort
-    | ADTLocalnameComplete
-    | ADTTxPower
+data GapAdvType
+    = GATNone
+    | GATFlags
+    | GATServices16bitMore
+    | GATServices16bitAll
+    | GATServices32bitMore
+    | GATServices32bitAll
+    | GATServices128bitMore
+    | GATServices128bitAll
+    | GATLocalnameShort
+    | GATLocalnameComplete
+    | GATTxPower
     deriving (Show, Enum)
 
-instance Binary ADType where
+instance Binary GapAdvType where
     put m = do
         putWord8 $ fromIntegral $ fromEnum m
     get = do
         toEnum . fromIntegral <$> getWord8
 
-data AdPolicy
+data GapAdvPolicy
     -- Respond to scan requests from any master, allow connection
     -- from any master (default)
-    = APAll
+    = GAPAll
     -- Respond to scan requests from whitelist only, allow connection
     -- from any
-    | APWhitelistScan
+    | GAPWhitelistScan
     -- Respond to scan requests from any, allow connection from
     -- whitelist only
-    | APWhitelistConnect
+    | GAPWhitelistConnect
     -- Respond to scan requests from whitelist only, allow connection
     -- from whitelist only
-    | APWhitelistAll
+    | GAPWhitelistAll
     deriving (Show, Enum)
 
-instance Binary AdPolicy where
+instance Binary GapAdvPolicy where
     put m = do
         putWord8 $ fromIntegral $ fromEnum m
     get = do
         toEnum . fromIntegral <$> getWord8
 
 
-data BluetoothAddressType
-    = BATPublic
-    | BATRandom
+data GapAddressType
+    = GATPublic
+    | GATRandom
     deriving (Show, Enum)
 
-instance Binary BluetoothAddressType where
+instance Binary GapAddressType where
     put m = do
         putWord8 $ fromIntegral $ fromEnum m
     get = do
         toEnum . fromIntegral <$> getWord8
 
-data GAPConnectableMode
+data GapConnectableMode
     -- Not connectable
     = GCMNonConnectable
     -- Directed Connectable
@@ -394,14 +394,14 @@ data GAPConnectableMode
     | GCMScannableNonConnectable
     deriving (Show, Enum)
 
-instance Binary GAPConnectableMode where
+instance Binary GapConnectableMode where
     put m = do
         putWord8 $ fromIntegral $ fromEnum m
     get = do
         toEnum . fromIntegral <$> getWord8
     
 
-data GAPDiscoverableMode
+data GapDiscoverableMode
     -- Non-discoverable mode: the LE Limited Discoverable Mode and the
     -- LE General Discoverable Mode bits are NOT set in the Flags AD
     -- type. A master can still connect to the advertising slave in this mode.
@@ -428,7 +428,7 @@ data GAPDiscoverableMode
     | GDMEnhancedBroadcasting
     deriving (Show, Enum)
 
-instance Binary GAPDiscoverableMode where
+instance Binary GapDiscoverableMode where
     put m = do
         putWord8$ case m of
             GDMEnhancedBroadcasting -> 0x80
@@ -483,15 +483,15 @@ instance Binary GSPScanHeaderFlag where
     get = do
         toEnum . fromIntegral <$> getWord8
 
-data ScanPolicy
+data GapScanPolicy
     -- All advertisement Packets (default)
-    = SPAll
+    = GSPAll
     -- Ignore advertisement packets from remote slaves not in the running
     -- whitelist
-    | SPWhitelist
+    | GSPWhitelist
     deriving (Show, Enum)
 
-instance Binary ScanPolicy where
+instance Binary GapScanPolicy where
     put m = do
         putWord8 $ fromIntegral $ fromEnum m
     get = do

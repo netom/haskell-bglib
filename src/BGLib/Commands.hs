@@ -64,6 +64,7 @@ module BGLib.Commands
     , hardwareI2cWrite
     , hardwareIoPortConfigDirection
     , hardwareIoPortConfigFunction
+    , hardwareIoPortConfigIrq
     , hardwareIoPortConfigPull
     , hardwareIoPortIrqDirection
     , hardwareIoPortIrqEnable
@@ -563,133 +564,142 @@ evtGapScanResponse
 
 hardwareAdcRead
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-hardwareAdcRead = error "Not implemented yet."
+    => UInt8 -> UInt8 -> UInt8 -> m BGResult
+hardwareAdcRead = curry3 $ xCmd BgMsgCR BgBlue BgClsHardware 0x02
 
 hardwareAnalogComparatorConfigIrq
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-hardwareAnalogComparatorConfigIrq = error "Not implemented yet."
+    => Bool -> m BGResult
+hardwareAnalogComparatorConfigIrq = xCmd BgMsgCR BgBlue BgClsHardware 0x12
 
 hardwareAnalogComparatorEnable
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-hardwareAnalogComparatorEnable = error "Not implemented yet."
+    => Bool -> m ()
+hardwareAnalogComparatorEnable = xCmd BgMsgCR BgBlue BgClsHardware 0x10
 
 hardwareAnalogComparatorRead
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-hardwareAnalogComparatorRead = error "Not implemented yet."
+    => m (BGResult, UInt8)
+hardwareAnalogComparatorRead = xCmd BgMsgCR BgBlue BgClsHardware 0x11 ()
 
 hardwareGetTimestamp
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-hardwareGetTimestamp = error "Not implemented yet."
+    => m UInt32
+hardwareGetTimestamp = xCmd BgMsgCR BgBlue BgClsHardware 0x16 ()
 
 hardwareI2cRead
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-hardwareI2cRead = error "Not implemented yet."
+    => UInt8 -> Bool -> UInt8 -> m (UInt16, UInt8Array)
+hardwareI2cRead = curry3 $ xCmd BgMsgCR BgBlue BgClsHardware 0x0a
 
 hardwareI2cWrite
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-hardwareI2cWrite = error "Not implemented yet."
+    => UInt8 -> Bool -> UInt8Array -> m UInt8
+hardwareI2cWrite = curry3 $ xCmd BgMsgCR BgBlue BgClsHardware 0x0b
 
 hardwareIoPortConfigDirection
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-hardwareIoPortConfigDirection = error "Not implemented yet."
+    => UInt8 -> UInt8 -> m BGResult
+hardwareIoPortConfigDirection = curry $ xCmd BgMsgCR BgBlue BgClsHardware 0x03
 
 hardwareIoPortConfigFunction
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-hardwareIoPortConfigFunction = error "Not implemented yet."
+    => UInt8 -> UInt8 -> m BGResult
+hardwareIoPortConfigFunction = curry $ xCmd BgMsgCR BgBlue BgClsHardware 0x04
+
+hardwareIoPortConfigIrq
+    :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
+    => UInt8 -> UInt8 -> Bool -> m BGResult
+hardwareIoPortConfigIrq = curry3 $ xCmd BgMsgCR BgBlue BgClsHardware 0x00
 
 hardwareIoPortConfigPull
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-hardwareIoPortConfigPull = error "Not implemented yet."
+    => UInt8 -> UInt8 -> Bool -> m BGResult
+hardwareIoPortConfigPull = curry3 $ xCmd BgMsgCR BgBlue BgClsHardware 0x05
 
 hardwareIoPortIrqDirection
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-hardwareIoPortIrqDirection = error "Not implemented yet."
+    => UInt8 -> Bool -> m BGResult
+hardwareIoPortIrqDirection = curry $ xCmd BgMsgCR BgBlue BgClsHardware 0x0f
 
 hardwareIoPortIrqEnable
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-hardwareIoPortIrqEnable = error "Not implemented yet."
+    => UInt8 -> UInt8 -> m BGResult
+hardwareIoPortIrqEnable = curry $ xCmd BgMsgCR BgBlue BgClsHardware 0x0e
 
 hardwareIoPortRead
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-hardwareIoPortRead = error "Not implemented yet."
+    => UInt8 -> UInt8 -> m (BGResult, UInt8, UInt8)
+hardwareIoPortRead = curry $ xCmd BgMsgCR BgBlue BgClsHardware 0x07
 
 hardwareIoPortWrite
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-hardwareIoPortWrite = error "Not implemented yet."
+    => UInt8 -> UInt8 -> UInt8 -> m BGResult
+hardwareIoPortWrite = curry3 $ xCmd BgMsgCR BgBlue BgClsHardware 0x06
 
 hardwareSetRxgain
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-hardwareSetRxgain = error "Not implemented yet."
+    => UInt8 -> m ()
+hardwareSetRxgain = xCmd BgMsgCR BgBlue BgClsHardware 0x13
 
 hardwareSetSoftTimer
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-hardwareSetSoftTimer = error "Not implemented yet."
+    => UInt32 -> UInt8 -> Bool -> m BGResult
+hardwareSetSoftTimer = curry3 $ xCmd BgMsgCR BgBlue BgClsHardware 0x01
 
 hardwareSetTxpower
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-hardwareSetTxpower = error "Not implemented yet."
+    => UInt8 -> m ()
+hardwareSetTxpower = xCmd BgMsgCR BgBlue BgClsHardware 0x0c
 
 hardwareSleepEnable
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-hardwareSleepEnable = error "Not implemented yet."
+    => Bool -> m BGResult
+hardwareSleepEnable = xCmd BgMsgCR BgBlue BgClsHardware 0x15
 
 hardwareSpiConfig
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-hardwareSpiConfig = error "Not implemented yet."
+    => Bool -> Bool -> Bool -> Bool -> UInt8 -> UInt8 -> m BGResult
+hardwareSpiConfig = curry6 $ xCmd BgMsgCR BgBlue BgClsHardware 0x08
 
 hardwareSpiTransfer
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-hardwareSpiTransfer = error "Not implemented yet."
+    => UInt8 -> UInt8Array -> m (BGResult, UInt8, UInt8Array)
+hardwareSpiTransfer = curry $ xCmd BgMsgCR BgBlue BgClsHardware 0x09
 
 hardwareTimerComparator
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-hardwareTimerComparator = error "Not implemented yet."
+    => UInt8 -> UInt8 -> UInt8 -> UInt16 -> m BGResult
+hardwareTimerComparator = curry4 $ xCmd BgMsgCR BgBlue BgClsHardware 0x0d
 
 hardwareUsbEnable
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-hardwareUsbEnable = error "Not implemented yet."
+    => Bool -> m BGResult
+hardwareUsbEnable = xCmd BgMsgCR BgBlue BgClsHardware 0x14
 
 evtHardwareAdcResult
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => (() -> IO Bool) -> m ThreadId
-evtHardwareAdcResult = error "Not implemented yet."
+    => (UInt8 -> UInt16 -> IO Bool) -> m ThreadId
+evtHardwareAdcResult
+    = registerEventHandler BgMsgEvent BgBlue BgClsHardware 0x02 . uncurry
 
 evtHardwareAnalogComparatorStatus
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => (() -> IO Bool) -> m ThreadId
-evtHardwareAnalogComparatorStatus = error "Not implemented yet."
+    => (UInt32 -> UInt8 -> IO Bool) -> m ThreadId
+evtHardwareAnalogComparatorStatus
+    = registerEventHandler BgMsgEvent BgBlue BgClsHardware 0x03 . uncurry
 
 evtHardwareIoPortStatus
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => (() -> IO Bool) -> m ThreadId
-evtHardwareIoPortStatus = error "Not implemented yet."
+    => (UInt32 -> UInt8 -> UInt8 -> UInt8 -> IO Bool) -> m ThreadId
+evtHardwareIoPortStatus
+    = registerEventHandler BgMsgEvent BgBlue BgClsHardware 0x00 . uncurry4
 
 evtHardwareSoftTimer
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => (() -> IO Bool) -> m ThreadId
-evtHardwareSoftTimer = error "Not implemented yet."
+    => (UInt8 -> IO Bool) -> m ThreadId
+evtHardwareSoftTimer
+    = registerEventHandler BgMsgEvent BgBlue BgClsHardware 0x01
 
 -----------------------------------------------------------------------
 -- Persistent Store
@@ -818,26 +828,21 @@ evtSmPasskeyRequest = error "Not implemented yet."
 -- System
 -----------------------------------------------------------------------
 
--- This command reads the local devices public Bluetooth address.
 systemAddressGet
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
     => m BdAddr
 systemAddressGet = xCmd BgMsgCR BgBlue BgClsSystem 0x02 ()
 
--- This command decrypts the given data using the AES algorithm with the predefined key set with command Aes
--- Setkey .
 systemAesDecrypt
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
     => UInt8Array -> m UInt8Array
 systemAesDecrypt dta = xCmd BgMsgCR BgBlue BgClsSystem 0x11 dta
 
--- This command encrypts the given data using the AES algorithm with the predefined with command Aes Setkey .
 systemAesEncrypt
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
     => UInt8Array -> m UInt8Array
 systemAesEncrypt dta = xCmd BgMsgCR BgBlue BgClsSystem 0x10 dta
 
--- This command defines the encryption key that will be used with the AES encrypt and decrypt commands.
 systemAesSetkey
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
     => UInt8Array -> m ()
@@ -883,14 +888,11 @@ systemGetInfo
     => m ()
 systemGetInfo = error "Not implemented yet."
 
-
--- This command can be used to test if the local device is functional. Similar to a typical "AT" -> "OK" test.
 systemHello
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
     => m ()
 systemHello = xCmd BgMsgCR BgBlue BgClsSystem 0x01 ()
 
--- This command resets the local device immediately. The command does not have a response.
 systemReset
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasDebug env)
     => RebootMode -> m ()
@@ -936,7 +938,6 @@ evtSystemNoLicenseKey
     => (() -> IO Bool) -> m ThreadId
 evtSystemNoLicenseKey = error "Not implemented yet."
 
--- Event handler for protocol errors
 evtSystemProtocolError
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
     => (BGResult -> IO Bool) -> m ThreadId

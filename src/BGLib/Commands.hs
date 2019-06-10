@@ -762,68 +762,72 @@ evtFlashPsKey
 
 smDeleteBonding
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-smDeleteBonding = error "Not implemented yet."
+    => UInt8 -> m BGResult
+smDeleteBonding = xCmd BgMsgCR BgBlue BgClsSecurityManager 0x02
 
 smEncryptStart
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-smEncryptStart = error "Not implemented yet."
+    => UInt8 -> Bool -> m (UInt8, BGResult)
+smEncryptStart = curry $ xCmd BgMsgCR BgBlue BgClsSecurityManager 0x00
 
 smGetBonds
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-smGetBonds = error "Not implemented yet."
+    => m UInt8
+smGetBonds = xCmd BgMsgCR BgBlue BgClsSecurityManager 0x05 ()
 
 smPasskeyEntry
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-smPasskeyEntry = error "Not implemented yet."
+    => UInt8 -> UInt32 -> m BGResult
+smPasskeyEntry = curry $ xCmd BgMsgCR BgBlue BgClsSecurityManager 0x04
 
 setBondableMode
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-setBondableMode = error "Not implemented yet."
+    => Bool -> m ()
+setBondableMode = xCmd BgMsgCR BgBlue BgClsSecurityManager 0x01
 
 smSetOobData
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-smSetOobData = error "Not implemented yet."
+    => UInt8Array -> m ()
+smSetOobData = xCmd BgMsgCR BgBlue BgClsSecurityManager 0x06
 
 smSetPairingDistributionKeys
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-smSetPairingDistributionKeys = error "Not implemented yet."
+    => UInt8 -> UInt8 -> m BGResult
+smSetPairingDistributionKeys = curry $ xCmd BgMsgCR BgBlue BgClsSecurityManager 0x08
 
 smSetParameters
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-smSetParameters = error "Not implemented yet."
+    => Bool -> UInt8 -> SMIOCapabilities -> m ()
+smSetParameters = curry3 $ xCmd BgMsgCR BgBlue BgClsSecurityManager 0x03
 
 smWhitelistBonds
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-smWhitelistBonds = error "Not implemented yet."
+    => m (BGResult, UInt8)
+smWhitelistBonds = xCmd BgMsgCR BgBlue BgClsSecurityManager 0x07 ()
 
 evtSmBondingFail
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => (() -> IO Bool) -> m ThreadId
-evtSmBondingFail = error "Not implemented yet."
+    => (UInt8 -> BGResult -> IO Bool) -> m ThreadId
+evtSmBondingFail
+    = registerEventHandler BgMsgEvent BgBlue BgClsSecurityManager 0x01 . uncurry
 
 evtSmBondStatus
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => (() -> IO Bool) -> m ThreadId
-evtSmBondStatus = error "Not implemented yet."
+    => (UInt8 -> UInt8 -> Bool -> UInt8 -> IO Bool) -> m ThreadId
+evtSmBondStatus
+    = registerEventHandler BgMsgEvent BgBlue BgClsSecurityManager 0x04 . uncurry4
 
 evtSmPasskeyDisplay
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => (() -> IO Bool) -> m ThreadId
-evtSmPasskeyDisplay = error "Not implemented yet."
+    => (UInt8 -> UInt32 -> IO Bool) -> m ThreadId
+evtSmPasskeyDisplay
+    = registerEventHandler BgMsgEvent BgBlue BgClsSecurityManager 0x02 . uncurry
 
 evtSmPasskeyRequest
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => (() -> IO Bool) -> m ThreadId
-evtSmPasskeyRequest = error "Not implemented yet."
+    => (UInt8 -> IO Bool) -> m ThreadId
+evtSmPasskeyRequest
+    = registerEventHandler BgMsgEvent BgBlue BgClsSecurityManager 0x03
 
 -----------------------------------------------------------------------
 -- System

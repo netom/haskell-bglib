@@ -102,7 +102,7 @@ main = do
         -- Register an event handler for scan responses. Can be done anywhere.
         -- The handler forks a thread that runs forever, and can be terminated
         -- later if necessary.
-        tid <- evtGapScanResponse $ \(rssi, _, sender, _, _, _) -> do
+        tid <- evtGapScanResponse $ \rssi _ sender _ _ _ -> do
             print rssi
             print sender
             putStrLn ""

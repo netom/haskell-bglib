@@ -126,7 +126,9 @@ data BgCommandClass
     | BgClsAttributeClient
     | BgClsSecurityManager
     | BgClsGenericAccessProfile
-    | BgClsHardware deriving (Eq, Show, Enum)
+    | BgClsHardware
+    | BgClsTest
+    deriving (Eq, Show, Enum)
 
 data BgPacketHeader = BgPacketHeader
     { bghMessageType    :: BgMessageType

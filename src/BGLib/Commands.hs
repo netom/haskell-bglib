@@ -974,28 +974,28 @@ evtSystemUsbEnumerated
 
 testChannelMode
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-testChannelMode = error "Not implemented yet."
+    => UInt8 -> m ()
+testChannelMode = xCmd BgMsgCR BgBlue BgClsTest 0x06
 
 testGetChannelMap
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-testGetChannelMap = error "Not implemented yet."
+    => m UInt8Array
+testGetChannelMap = xCmd BgMsgCR BgBlue BgClsTest 0x04 ()
 
 testPhyEnd
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-testPhyEnd = error "Not implemented yet."
+    => m UInt16
+testPhyEnd = xCmd BgMsgCR BgBlue BgClsTest 0x02 ()
 
 testPhyRx
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-testPhyRx = error "Not implemented yet."
+    => UInt8 -> m ()
+testPhyRx = xCmd BgMsgCR BgBlue BgClsTest 0x01
 
 testPhyTx
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-testPhyTx = error "Not implemented yet."
+    => UInt8 -> UInt8 -> UInt8 -> m ()
+testPhyTx = curry3 $ xCmd BgMsgCR BgBlue BgClsTest 0x00
 
 -----------------------------------------------------------------------
 -- Device Firmware Upgrade

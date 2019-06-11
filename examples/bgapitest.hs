@@ -1,3 +1,4 @@
+{-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 import           BGLib.Commands
@@ -9,6 +10,8 @@ import           Control.Monad.Reader
 import qualified Data.ByteString.Char8 as BSS
 import           Data.Semigroup ((<>))
 import           Options.Applicative
+import           Prelude hiding (print, putStrLn)
+import qualified Prelude as P
 import           System.Exit
 import           System.Hardware.Serialport
 
@@ -45,6 +48,12 @@ optParser = AppOptions
 execApp :: env -> ReaderT env m a -> m a
 execApp = flip runReaderT
 
+putStrLn :: MonadIO m => String -> m ()
+putStrLn = liftIO . P.putStrLn
+
+print :: (MonadIO m, Show a) => a -> m ()
+print = liftIO . P.print
+
 main :: IO ()
 main = do
     appOpts <- execParser $
@@ -71,33 +80,48 @@ main = do
         -- pushing them to the broadcast TChan
         startPacketReader
 
-        liftIO $ putStrLn "Running hello"
+        putStrLn "Running hello"
         systemHello
-        liftIO $ putStrLn ""
+        putStrLn "If you can read this, we're fine. :)"
+        putStrLn ""
 
-        liftIO $ putStrLn "We should get a \"not connected\" error:"
-        attclientAttributeWrite 0 0 "e" >>= liftIO . print
-        liftIO $ putStrLn ""
+        putStrLn "Getting system information:"
+        (major, minor, patch, build, llVersion, protocolVersion, hw) <- systemGetInfo
+        putStrLn $ "Major version:      " ++ show major
+        putStrLn $ "Minor version:      " ++ show minor
+        putStrLn $ "Patch version:      " ++ show patch
+        putStrLn $ "Build Version:      " ++ show build
+        putStrLn $ "Link Layer version: " ++ show llVersion
+        putStrLn $ "Protocol version:   " ++ show protocolVersion
+        putStrLn $ "Hardware version:   " ++ show hw
+        putStrLn ""
 
-        liftIO $ putStrLn "Getting Bluetooth Address:"
-        systemAddressGet >>= liftIO . print
-        liftIO $ putStrLn ""
+        putStrLn "We should get a \"not connected\" error:"
+        attclientAttributeWrite 0 0 "e" >>= print
+        putStrLn ""
+
+        putStrLn "Getting Bluetooth Address:"
+        systemAddressGet >>= print
+        putStrLn ""
+
+        putStrLn "Running some encryption-decription tests"
+        putStrLn ""
 
         let aeskey = "abcdefgh12345678"
-        liftIO $ putStrLn $ "Setting AES key to " ++ aeskey
+        putStrLn $ "Setting AES key to " ++ aeskey
         systemAesSetkey $ toUInt8Array $ BSS.pack $ aeskey
-        liftIO $ putStrLn ""
+        putStrLn ""
 
         let plaintext = "This is plain"
-        liftIO $ putStrLn $ "Encrypting: " ++ plaintext
+        putStrLn $ "Encrypting: " ++ plaintext
         encrypted <- systemAesEncrypt $ toUInt8Array $ BSS.pack $ plaintext
-        liftIO $ putStrLn $ "Encrypted: " ++ bsShowHex (fromUInt8Array encrypted)
-        liftIO $ putStrLn ""
+        putStrLn $ "Encrypted: " ++ bsShowHex (fromUInt8Array encrypted)
+        putStrLn ""
 
-        liftIO $ putStrLn $ "Decrypting"
+        putStrLn $ "Decrypting"
         decrypted <- systemAesDecrypt encrypted
-        liftIO $ putStrLn $ "Decrypted: " ++ BSS.unpack (fromUInt8Array decrypted)
-        liftIO $ putStrLn ""
+        putStrLn $ "Decrypted: " ++ BSS.unpack (fromUInt8Array decrypted)
+        putStrLn ""
 
         -- Register an event handler for scan responses. Can be done anywhere.
         -- The handler forks a thread that runs forever, and can be terminated

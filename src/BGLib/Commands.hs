@@ -259,6 +259,9 @@ curry6 func a b c d e f = func (a, b, c, d, e, f)
 uncurry6 :: (a -> b -> c -> d -> e -> f -> g) -> (a, b, c, d, e, f) -> g
 uncurry6 func (a, b, c, d, e, f) = func a b c d e f
 
+uncurry7 :: (a -> b -> c -> d -> e -> f -> g -> h) -> (a, b, c, d, e, f, g) -> h
+uncurry7 func (a, b, c, d, e, f, g) = func a b c d e f g
+
 uncurry8 :: (a -> b -> c -> d -> e -> f -> g -> h -> i) -> (a, b, c, d, e, f, g, h) -> i
 uncurry8 func (a, b, c, d, e, f, g, h) = func a b c d e f g h
 
@@ -841,57 +844,57 @@ systemAddressGet = xCmd BgMsgCR BgBlue BgClsSystem 0x02 ()
 systemAesDecrypt
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
     => UInt8Array -> m UInt8Array
-systemAesDecrypt dta = xCmd BgMsgCR BgBlue BgClsSystem 0x11 dta
+systemAesDecrypt = xCmd BgMsgCR BgBlue BgClsSystem 0x11
 
 systemAesEncrypt
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
     => UInt8Array -> m UInt8Array
-systemAesEncrypt dta = xCmd BgMsgCR BgBlue BgClsSystem 0x10 dta
+systemAesEncrypt = xCmd BgMsgCR BgBlue BgClsSystem 0x10
 
 systemAesSetkey
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
     => UInt8Array -> m ()
-systemAesSetkey key = xCmd BgMsgCR BgBlue BgClsSystem 0x0f key
+systemAesSetkey = xCmd BgMsgCR BgBlue BgClsSystem 0x0f
 
 systemDelayReset
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-systemDelayReset = error "Not implemented yet."
+    => RebootMode -> UInt16 -> m ()
+systemDelayReset = curry $ xCmd' BgMsgCR BgBlue BgClsSystem 0x14
 
 systemEndpointRx
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-systemEndpointRx = error "Not implemented yet."
+    => UInt8 -> UInt8 -> m (BGResult, UInt8Array)
+systemEndpointRx = curry $ xCmd BgMsgCR BgBlue BgClsSystem 0x0d
 
 systemEndpointSetWatermarks
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-systemEndpointSetWatermarks = error "Not implemented yet."
+    => UInt8 -> UInt8 -> UInt8 -> m BGResult
+systemEndpointSetWatermarks = curry3 $ xCmd BgMsgCR BgBlue BgClsSystem 0x0e
 
 systemEndpointTx
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-systemEndpointTx = error "Not implemented yet."
+    => UInt8 -> UInt8Array -> m BGResult
+systemEndpointTx = curry $ xCmd BgMsgCR BgBlue BgClsSystem 0x09
 
 systemGetBootloaderCrc
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-systemGetBootloaderCrc = error "Not implemented yet."
+    => m UInt16
+systemGetBootloaderCrc = xCmd BgMsgCR BgBlue BgClsSystem 0x13 ()
 
 systemGetConnections
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-systemGetConnections = error "Not implemented yet."
+    => m UInt8
+systemGetConnections = xCmd BgMsgCR BgBlue BgClsSystem 0x06 ()
 
 systemGetCounters
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-systemGetCounters = error "Not implemented yet."
+    => m (UInt8, UInt8, UInt8, UInt8, UInt8)
+systemGetCounters = xCmd BgMsgCR BgBlue BgClsSystem 0x05 ()
 
 systemGetInfo
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-systemGetInfo = error "Not implemented yet."
+    => m (UInt16, UInt16, UInt16, UInt16, UInt16, UInt8, UInt8)
+systemGetInfo = xCmd BgMsgCR BgBlue BgClsSystem 0x08 ()
 
 systemHello
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
@@ -901,47 +904,51 @@ systemHello = xCmd BgMsgCR BgBlue BgClsSystem 0x01 ()
 systemReset
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasDebug env)
     => RebootMode -> m ()
-systemReset mode = xCmd' BgMsgCR BgBlue BgClsSystem 0x01 mode
+systemReset = xCmd' BgMsgCR BgBlue BgClsSystem 0x01
 
 systemUsbEnumerationStatusGet
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-systemUsbEnumerationStatusGet = error "Not implemented yet."
+    => m (BGResult, Bool)
+systemUsbEnumerationStatusGet = xCmd BgMsgCR BgBlue BgClsSystem 0x12 ()
 
 systemWhitelistAppend
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-systemWhitelistAppend = error "Not implemented yet."
+    => BdAddr -> GapAddressType -> m BGResult
+systemWhitelistAppend = curry $ xCmd BgMsgCR BgBlue BgClsSystem 0x0a
 
 systemWhitelistClear
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
     => m ()
-systemWhitelistClear = error "Not implemented yet."
+systemWhitelistClear = xCmd BgMsgCR BgBlue BgClsSystem 0x0c ()
 
 systemWhitelistRemove
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-systemWhitelistRemove = error "Not implemented yet."
+    => BdAddr -> GapAddressType -> m BGResult
+systemWhitelistRemove = curry $ xCmd BgMsgCR BgBlue BgClsSystem 0x0b
 
 evtSystemBoot
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => (() -> IO Bool) -> m ThreadId
-evtSystemBoot = error "Not implemented yet."
+    => (UInt16 -> UInt16 -> UInt16 -> UInt16 -> UInt16 -> UInt8 -> UInt8 -> IO Bool) -> m ThreadId
+evtSystemBoot
+    = registerEventHandler BgMsgEvent BgBlue BgClsSystem 0x00 . uncurry7
 
 evtSystemEndpointWatermarkRx
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => (() -> IO Bool) -> m ThreadId
-evtSystemEndpointWatermarkRx = error "Not implemented yet."
+    => (UInt8 -> UInt8 -> IO Bool) -> m ThreadId
+evtSystemEndpointWatermarkRx
+    = registerEventHandler BgMsgEvent BgBlue BgClsSystem 0x02 . uncurry
 
 evtSystemEndpointWatermarkTx
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => (() -> IO Bool) -> m ThreadId
-evtSystemEndpointWatermarkTx = error "Not implemented yet."
+    => (UInt8 -> UInt8 -> IO Bool) -> m ThreadId
+evtSystemEndpointWatermarkTx
+    = registerEventHandler BgMsgEvent BgBlue BgClsSystem 0x03 . uncurry
 
 evtSystemNoLicenseKey
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
     => (() -> IO Bool) -> m ThreadId
-evtSystemNoLicenseKey = error "Not implemented yet."
+evtSystemNoLicenseKey
+    = registerEventHandler BgMsgEvent BgBlue BgClsSystem 0x05
 
 evtSystemProtocolError
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
@@ -951,13 +958,15 @@ evtSystemProtocolError
 
 evtSystemScriptFailure
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => (() -> IO Bool) -> m ThreadId
-evtSystemScriptFailure = error "Not implemented yet."
+    => (UInt16 -> BGResult -> IO Bool) -> m ThreadId
+evtSystemScriptFailure
+    = registerEventHandler BgMsgEvent BgBlue BgClsSystem 0x04 . uncurry
 
 evtSystemUsbEnumerated
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => (() -> IO Bool) -> m ThreadId
-evtSystemUsbEnumerated = error "Not implemented yet."
+    => (Bool -> IO Bool) -> m ThreadId
+evtSystemUsbEnumerated
+    = registerEventHandler BgMsgEvent BgBlue BgClsSystem 0x07
 
 -----------------------------------------------------------------------
 -- Testing

@@ -2,8 +2,8 @@
 
 An implementation of the BGAPI serial protocol.
 
-This protocol is spoken by Silicon Laboratories (formely BlueGiga)
-Bluetooth and Wifi products via UART or USB.
+This protocol is spoken by Silicon Labs (formely BlueGiga) Bluetooth
+and Wifi products via UART or USB.
 
 The Bluetooth Smart Software API Reference Manual can be found at:
 

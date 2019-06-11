@@ -128,6 +128,7 @@ data BgCommandClass
     | BgClsGenericAccessProfile
     | BgClsHardware
     | BgClsTest
+    | BgClsDfu
     deriving (Eq, Show, Enum)
 
 data BgPacketHeader = BgPacketHeader

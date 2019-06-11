@@ -1003,25 +1003,25 @@ testPhyTx = curry3 $ xCmd BgMsgCR BgBlue BgClsTest 0x00
 
 dfuFlashSetAddress
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-dfuFlashSetAddress = error "Not implemented yet."
+    => UInt32 -> m BGResult
+dfuFlashSetAddress = xCmd BgMsgCR BgBlue BgClsDfu 0x01
 
 dfuFlashUpload
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-dfuFlashUpload = error "Not implemented yet."
+    => UInt8Array -> m BGResult
+dfuFlashUpload = xCmd BgMsgCR BgBlue BgClsDfu 0x02
 
 dfuFlashUploadFinish
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-dfuFlashUploadFinish = error "Not implemented yet."
+    => m BGResult
+dfuFlashUploadFinish = xCmd BgMsgCR BgBlue BgClsDfu 0x03 ()
 
 dfuReset
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => m ()
-dfuReset = error "Not implemented yet."
+    => Bool -> m ()
+dfuReset = xCmd' BgMsgCR BgBlue BgClsDfu 0x00
 
 evtDfuBoot
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => (() -> IO Bool) -> m ThreadId
-evtDfuBoot = error "Not implemented yet."
+    => (UInt32 -> IO Bool) -> m ThreadId
+evtDfuBoot = registerEventHandler BgMsgEvent BgBlue BgClsDfu 0x00

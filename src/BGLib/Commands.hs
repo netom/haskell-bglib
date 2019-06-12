@@ -225,6 +225,11 @@ xCmd mt tt cc cid inp = do
     xCmd' mt tt cc cid inp
     decode . BSL.fromStrict . fromBgPayload . bgpPayload <$> ( liftIO $ waitForPacket chan mt tt cc cid )
 
+-- Register an event handler.
+-- Event handler block by waiting on the TChan provided by the
+-- environment. One can use forkIO to make event handler run in
+-- independent threads, or use race with threadDelay to wait for an
+-- event with a timeout.
 registerEventHandler
     :: (Binary a, MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env)
     => BgMessageType -> BgTecnologyType -> BgCommandClass -> UInt8 -> (a -> m (Maybe b)) -> m b
@@ -561,7 +566,7 @@ gapSetScanParameters = curry3 $ xCmd BgMsgCR BgBlue BgClsGenericAccessProfile 0x
 -- Register an event handler for GAP scan responses
 evtGapScanResponse
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => (Int8 -> UInt8 -> BdAddr -> UInt8 -> UInt8 -> UInt8Array -> m (Maybe a)) -> m a
+    => (Int8 -> UInt8 -> BdAddr -> GapAddressType -> UInt8 -> UInt8Array -> m (Maybe a)) -> m a
 evtGapScanResponse
     = registerEventHandler BgMsgEvent BgBlue BgClsGenericAccessProfile 0x00 . uncurry6
 

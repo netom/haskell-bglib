@@ -1,5 +1,5 @@
 name:                bglib
-version:             0.1.0.0
+version:             1.0.0.0
 synopsis:            Implementation of the BGAPI serial protocol
 description:         This library implements Silicon Labs' (formerly BlueGiga)
                      serial protocol to communicate with certain Bluetooth and

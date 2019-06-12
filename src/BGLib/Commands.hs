@@ -225,15 +225,19 @@ xCmd mt tt cc cid inp = do
     xCmd' mt tt cc cid inp
     decode . BSL.fromStrict . fromBgPayload . bgpPayload <$> ( liftIO $ waitForPacket chan mt tt cc cid )
 
-registerEventHandler :: Binary a => (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env) => BgMessageType -> BgTecnologyType -> BgCommandClass -> UInt8 -> (a -> IO Bool) -> m ThreadId
+registerEventHandler
+    :: (Binary a, MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env)
+    => BgMessageType -> BgTecnologyType -> BgCommandClass -> UInt8 -> (a -> m (Maybe b)) -> m b
 registerEventHandler mt tt cc cid handler = do
     chan <- askDupBGChan
-    liftIO $ forkIO $ go chan
+    go chan
     where
         go chan = do
-            BgPacket{..} <- waitForPacket chan mt tt cc cid
-            continue <- handler $ decode $ BSL.fromStrict $ fromBgPayload $ bgpPayload
-            if continue then go chan else return ()
+            BgPacket{..} <- liftIO $ waitForPacket chan mt tt cc cid
+            mbResult <- handler $ decode $ BSL.fromStrict $ fromBgPayload $ bgpPayload
+            case mbResult of
+                Nothing -> go chan
+                Just r  -> return r
 
 curry3 :: ((a, b, c) -> d) -> a -> b -> c -> d
 curry3 func a b c = func (a, b, c)
@@ -333,37 +337,37 @@ attclientWriteCommand = curry3 $ xCmd BgMsgCR BgBlue BgClsAttributeClient 0x06
 
 evtAttclientAttributeValue
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => (UInt8 -> UInt16 -> UInt8 -> UInt8Array -> IO Bool) -> m ThreadId
+    => (UInt8 -> UInt16 -> UInt8 -> UInt8Array -> m (Maybe a)) -> m a
 evtAttclientAttributeValue
     = registerEventHandler BgMsgEvent BgBlue BgClsAttributeClient 0x05 . uncurry4
 
 evtAttclientFindInformationFound
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => (UInt8 -> UInt16 -> UInt8Array -> IO Bool) -> m ThreadId
+    => (UInt8 -> UInt16 -> UInt8Array -> m (Maybe a)) -> m a
 evtAttclientFindInformationFound
     = registerEventHandler BgMsgEvent BgBlue BgClsAttributeClient 0x04 . uncurry3
 
 evtAttclientGroupFound
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => (UInt8 -> UInt16 -> UInt16 -> UInt8Array -> IO Bool) -> m ThreadId
+    => (UInt8 -> UInt16 -> UInt16 -> UInt8Array -> m (Maybe a)) -> m a
 evtAttclientGroupFound
     = registerEventHandler BgMsgEvent BgBlue BgClsAttributeClient 0x02 . uncurry4
 
 evtAttclientIndicated
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => (UInt8 -> UInt16 -> IO Bool) -> m ThreadId
+    => (UInt8 -> UInt16 -> m (Maybe a)) -> m a
 evtAttclientIndicated
     = registerEventHandler BgMsgEvent BgBlue BgClsAttributeClient 0x00 . uncurry
 
 evtAttclientProcedureCompleted
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => (UInt8 -> BGResult -> UInt16 -> IO Bool) -> m ThreadId
+    => (UInt8 -> BGResult -> UInt16 -> m (Maybe a)) -> m a
 evtAttclientProcedureCompleted
     = registerEventHandler BgMsgEvent BgBlue BgClsAttributeClient 0x01 . uncurry3
 
 evtAttclientReadMultipleResponse
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => (UInt8 -> UInt8Array -> IO Bool) -> m ThreadId
+    => (UInt8 -> UInt8Array -> m (Maybe a)) -> m a
 evtAttclientReadMultipleResponse
     = registerEventHandler BgMsgEvent BgBlue BgClsAttributeClient 0x06 . uncurry
 
@@ -403,19 +407,19 @@ attributesWrite = curry3 $ xCmd BgMsgCR BgBlue BgClsAttributeDatabase 0x00
 
 evtAttributesStatus
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => (UInt16 -> UInt8 -> IO Bool) -> m ThreadId
+    => (UInt16 -> UInt8 -> m (Maybe a)) -> m a
 evtAttributesStatus
     = registerEventHandler BgMsgEvent BgBlue BgClsAttributeDatabase 0x02 . uncurry
 
 evtAttributesUserReadRequest
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => (UInt8 -> UInt16 -> UInt16 -> UInt8 -> IO Bool) -> m ThreadId
+    => (UInt8 -> UInt16 -> UInt16 -> UInt8 -> m (Maybe a)) -> m a
 evtAttributesUserReadRequest
     = registerEventHandler BgMsgEvent BgBlue BgClsAttributeDatabase 0x01 . uncurry4
 
 evtAttributesValue
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => (UInt8 -> UInt8 -> UInt16 -> UInt16 -> UInt8Array -> IO Bool) -> m ThreadId
+    => (UInt8 -> UInt8 -> UInt16 -> UInt16 -> UInt8Array -> m (Maybe a)) -> m a
 evtAttributesValue
     = registerEventHandler BgMsgEvent BgBlue BgClsAttributeDatabase 0x00 . uncurry5
 
@@ -465,24 +469,24 @@ connectionVersionUpdate = xCmd BgMsgCR BgBlue BgClsConnection 0x03
 
 evtConnectionDisconnected
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => (UInt8 -> BGResult -> IO Bool) -> m ThreadId
+    => (UInt8 -> BGResult -> m (Maybe a)) -> m a
 evtConnectionDisconnected
     = registerEventHandler BgMsgEvent BgBlue BgClsConnection 0x04 . uncurry
 
 evtConnectionFeatureInd
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => (UInt8 -> UInt8Array -> IO Bool) -> m ThreadId
+    => (UInt8 -> UInt8Array -> m (Maybe a)) -> m a
 evtConnectionFeatureInd = registerEventHandler BgMsgEvent BgBlue BgClsConnection 0x02 . uncurry
 
 evtConnectionStatus
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => (UInt8 -> UInt8 -> BdAddr -> UInt8 -> UInt16 -> UInt16 -> UInt16 -> UInt8 -> IO Bool)
-    -> m ThreadId
+    => (UInt8 -> UInt8 -> BdAddr -> UInt8 -> UInt16 -> UInt16 -> UInt16 -> UInt8 -> m (Maybe a))
+    -> m a
 evtConnectionStatus = registerEventHandler BgMsgEvent BgBlue BgClsConnection 0x00 . uncurry8
 
 evtConnectionVersionInd
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => (UInt8 -> UInt8 -> UInt16 -> UInt16 -> IO Bool) -> m ThreadId
+    => (UInt8 -> UInt8 -> UInt16 -> UInt16 -> m (Maybe a)) -> m a
 evtConnectionVersionInd = registerEventHandler BgMsgEvent BgBlue BgClsConnection 0x01 . uncurry4
 
 -----------------------------------------------------------------------
@@ -557,7 +561,7 @@ gapSetScanParameters = curry3 $ xCmd BgMsgCR BgBlue BgClsGenericAccessProfile 0x
 -- Register an event handler for GAP scan responses
 evtGapScanResponse
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => (Int8 -> UInt8 -> BdAddr -> UInt8 -> UInt8 -> UInt8Array -> IO Bool) -> m ThreadId
+    => (Int8 -> UInt8 -> BdAddr -> UInt8 -> UInt8 -> UInt8Array -> m (Maybe a)) -> m a
 evtGapScanResponse
     = registerEventHandler BgMsgEvent BgBlue BgClsGenericAccessProfile 0x00 . uncurry6
 
@@ -682,25 +686,25 @@ hardwareUsbEnable = xCmd BgMsgCR BgBlue BgClsHardware 0x14
 
 evtHardwareAdcResult
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => (UInt8 -> UInt16 -> IO Bool) -> m ThreadId
+    => (UInt8 -> UInt16 -> m (Maybe a)) -> m a
 evtHardwareAdcResult
     = registerEventHandler BgMsgEvent BgBlue BgClsHardware 0x02 . uncurry
 
 evtHardwareAnalogComparatorStatus
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => (UInt32 -> UInt8 -> IO Bool) -> m ThreadId
+    => (UInt32 -> UInt8 -> m (Maybe a)) -> m a
 evtHardwareAnalogComparatorStatus
     = registerEventHandler BgMsgEvent BgBlue BgClsHardware 0x03 . uncurry
 
 evtHardwareIoPortStatus
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => (UInt32 -> UInt8 -> UInt8 -> UInt8 -> IO Bool) -> m ThreadId
+    => (UInt32 -> UInt8 -> UInt8 -> UInt8 -> m (Maybe a)) -> m a
 evtHardwareIoPortStatus
     = registerEventHandler BgMsgEvent BgBlue BgClsHardware 0x00 . uncurry4
 
 evtHardwareSoftTimer
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => (UInt8 -> IO Bool) -> m ThreadId
+    => (UInt8 -> m (Maybe a)) -> m a
 evtHardwareSoftTimer
     = registerEventHandler BgMsgEvent BgBlue BgClsHardware 0x01
 
@@ -755,7 +759,7 @@ flashWriteData = curry $ xCmd BgMsgCR BgBlue BgClsPersistentStore 0x07
 
 evtFlashPsKey
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => (UInt16 -> UInt8Array -> IO Bool) -> m ThreadId
+    => (UInt16 -> UInt8Array -> m (Maybe a)) -> m a
 evtFlashPsKey
     = registerEventHandler BgMsgEvent BgBlue BgClsPersistentStore 0x00 . uncurry
 
@@ -810,25 +814,25 @@ smWhitelistBonds = xCmd BgMsgCR BgBlue BgClsSecurityManager 0x07 ()
 
 evtSmBondingFail
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => (UInt8 -> BGResult -> IO Bool) -> m ThreadId
+    => (UInt8 -> BGResult -> m (Maybe a)) -> m a
 evtSmBondingFail
     = registerEventHandler BgMsgEvent BgBlue BgClsSecurityManager 0x01 . uncurry
 
 evtSmBondStatus
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => (UInt8 -> UInt8 -> Bool -> UInt8 -> IO Bool) -> m ThreadId
+    => (UInt8 -> UInt8 -> Bool -> UInt8 -> m (Maybe a)) -> m a
 evtSmBondStatus
     = registerEventHandler BgMsgEvent BgBlue BgClsSecurityManager 0x04 . uncurry4
 
 evtSmPasskeyDisplay
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => (UInt8 -> UInt32 -> IO Bool) -> m ThreadId
+    => (UInt8 -> UInt32 -> m (Maybe a)) -> m a
 evtSmPasskeyDisplay
     = registerEventHandler BgMsgEvent BgBlue BgClsSecurityManager 0x02 . uncurry
 
 evtSmPasskeyRequest
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => (UInt8 -> IO Bool) -> m ThreadId
+    => (UInt8 -> m (Maybe a)) -> m a
 evtSmPasskeyRequest
     = registerEventHandler BgMsgEvent BgBlue BgClsSecurityManager 0x03
 
@@ -928,43 +932,43 @@ systemWhitelistRemove = curry $ xCmd BgMsgCR BgBlue BgClsSystem 0x0b
 
 evtSystemBoot
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => (UInt16 -> UInt16 -> UInt16 -> UInt16 -> UInt16 -> UInt8 -> UInt8 -> IO Bool) -> m ThreadId
+    => (UInt16 -> UInt16 -> UInt16 -> UInt16 -> UInt16 -> UInt8 -> UInt8 -> m (Maybe a)) -> m a
 evtSystemBoot
     = registerEventHandler BgMsgEvent BgBlue BgClsSystem 0x00 . uncurry7
 
 evtSystemEndpointWatermarkRx
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => (UInt8 -> UInt8 -> IO Bool) -> m ThreadId
+    => (UInt8 -> UInt8 -> m (Maybe a)) -> m a
 evtSystemEndpointWatermarkRx
     = registerEventHandler BgMsgEvent BgBlue BgClsSystem 0x02 . uncurry
 
 evtSystemEndpointWatermarkTx
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => (UInt8 -> UInt8 -> IO Bool) -> m ThreadId
+    => (UInt8 -> UInt8 -> m (Maybe a)) -> m a
 evtSystemEndpointWatermarkTx
     = registerEventHandler BgMsgEvent BgBlue BgClsSystem 0x03 . uncurry
 
 evtSystemNoLicenseKey
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => (() -> IO Bool) -> m ThreadId
+    => (() -> m (Maybe a)) -> m a
 evtSystemNoLicenseKey
     = registerEventHandler BgMsgEvent BgBlue BgClsSystem 0x05
 
 evtSystemProtocolError
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => (BGResult -> IO Bool) -> m ThreadId
+    => (BGResult -> m (Maybe a)) -> m a
 evtSystemProtocolError
     = registerEventHandler BgMsgEvent BgBlue BgClsSystem 0x06
 
 evtSystemScriptFailure
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => (UInt16 -> BGResult -> IO Bool) -> m ThreadId
+    => (UInt16 -> BGResult -> m (Maybe a)) -> m a
 evtSystemScriptFailure
     = registerEventHandler BgMsgEvent BgBlue BgClsSystem 0x04 . uncurry
 
 evtSystemUsbEnumerated
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => (Bool -> IO Bool) -> m ThreadId
+    => (Bool -> m (Maybe a)) -> m a
 evtSystemUsbEnumerated
     = registerEventHandler BgMsgEvent BgBlue BgClsSystem 0x07
 
@@ -1023,5 +1027,5 @@ dfuReset = xCmd' BgMsgCR BgBlue BgClsDfu 0x00
 
 evtDfuBoot
     :: (MonadIO m, MonadReader env m, HasSerialPort env, HasBGChan env, HasDebug env)
-    => (UInt32 -> IO Bool) -> m ThreadId
+    => (UInt32 -> m (Maybe a)) -> m a
 evtDfuBoot = registerEventHandler BgMsgEvent BgBlue BgClsDfu 0x00

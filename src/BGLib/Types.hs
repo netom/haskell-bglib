@@ -61,6 +61,7 @@ module BGLib.Types
     , BGResult(..)
     ) where
 
+import           Control.Concurrent
 import           Control.Concurrent.STM.TChan
 import           Control.Monad.Reader
 import           Control.Concurrent.STM

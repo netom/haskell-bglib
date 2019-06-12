@@ -4,6 +4,7 @@
 import           BGLib.Commands
 import           BGLib.Types
 import           Control.Concurrent
+import           Control.Concurrent.Async
 import           Control.Concurrent.STM
 import           Control.Monad.IO.Class
 import           Control.Monad.Reader
@@ -15,16 +16,25 @@ import qualified Prelude as P
 import           System.Exit
 import           System.Hardware.Serialport
 
+-- This is our monad stack, most of the application runs inside this.
+type AppM env a = ReaderT env IO a
+
+-- We store the command line options here
 data AppOptions = AppOptions
     { appOptSerialPort :: String
     , appOptDebug      :: Bool
     }
 
+-- The data structure will be our "env", the environment stored in the
+-- ReaderT env IO monad stack
 data App = App
     { appOptions :: AppOptions
     , appSerialPort :: SerialPort
     , appBGChan  :: TChan BgPacket
     }
+
+-- Instances for our environment to properly serve the library
+-- functions.
 
 instance HasSerialPort App where
     getSerialPort = appSerialPort
@@ -35,6 +45,7 @@ instance HasBGChan App where
 instance HasDebug App where
     getDebug = appOptDebug . appOptions
 
+-- Command line parser
 optParser :: Parser AppOptions
 optParser = AppOptions
         <$> argument str 
@@ -45,8 +56,28 @@ optParser = AppOptions
             <> short 'd'
             <> help "Whether to be quiet" )
 
-execApp :: env -> ReaderT env m a -> m a
+-- Takes an environment and runs a program with it inside the IO monad.
+execApp :: env -> AppM env a -> IO a
 execApp = flip runReaderT
+
+-- RUns a program in a new thread inside out AppM stack
+forkApp :: AppM env () -> AppM env ThreadId
+forkApp act = do
+    env <- ask
+    liftIO $ forkIO $ execApp env act
+
+-- Can be used to wait for an event handler to return a value.
+-- Waiting for a specific BLE device advertisement to appear for
+-- example. Timeout is in microseconds.
+withTimeOut :: Int -> AppM env a -> AppM env (Maybe a)
+withTimeOut t a = do
+    env <- ask
+    res <- liftIO $ race (threadDelay t) (execApp env a)
+    return $ case res of
+        Left () -> Nothing
+        Right x -> Just x
+
+-- A few lifted functions
 
 putStrLn :: MonadIO m => String -> m ()
 putStrLn = liftIO . P.putStrLn
@@ -56,6 +87,7 @@ print = liftIO . P.print
 
 main :: IO ()
 main = do
+    -- Run the command line parser
     appOpts <- execParser $
         info
             ( optParser <**> helper )
@@ -64,6 +96,7 @@ main = do
             <> header "bgapitest - a short text / example for haskell-bglib"
             )
 
+    -- Build the application environment
     app <- App
         <$> return appOpts
         <*> openSerial
@@ -71,12 +104,16 @@ main = do
             (SerialPortSettings CS115200 8 One NoParity NoFlowControl 1000)
         <*> atomically newBroadcastTChan
 
+    -- Run the application
     execApp app $ do
-        -- Register an event handler for protocol errors.
-        _ <- evtSystemProtocolError $ \reason -> do
-            die $ "*** PROTOCOL ERROR " ++ show reason
 
-            -- Starts a thread that keeps reading packets from the serial port,
+        -- Register an event handler for protocol errors.
+        -- Event handlers are blocking. We use forkApp to make it
+        -- "run in the background".
+        _ <- forkApp $ evtSystemProtocolError $ \reason -> do
+            liftIO $ die $ "*** PROTOCOL ERROR " ++ show reason
+
+        -- Starts a thread that keeps reading packets from the serial port,
         -- pushing them to the broadcast TChan
         startPacketReader
 
@@ -122,25 +159,21 @@ main = do
         decrypted <- systemAesDecrypt encrypted
         putStrLn $ "Decrypted: " ++ BSS.unpack (fromUInt8Array decrypted)
         putStrLn ""
+        
+        _ <- gapDiscover GapDiscoverGeneric
 
         -- Register an event handler for scan responses. Can be done anywhere.
         -- The handler forks a thread that runs forever, and can be terminated
         -- later if necessary.
-        tid <- evtGapScanResponse $ \rssi _ sender _ _ _ -> do
-            print rssi
-            print sender
-            putStrLn ""
-            return True -- We'd like to listen to further events.
-
-        _ <- gapDiscover GapDiscoverGeneric
-
-        liftIO $ threadDelay 5000000
+        _ <- withTimeOut 5000000 $ evtGapScanResponse $ \rssi _ sender _ _ _ -> do
+                print rssi
+                print sender
+                putStrLn ""
+                return $ Nothing -- We'd like to listen to further events.
 
         _ <- gapEndProcedure
 
-        liftIO $ killThread tid
-
-        -- Let's cause trouble.
+        putStrLn "Let's cause trouble:"
         s <- askSerialPort
         _ <- liftIO $ send s $ BSS.pack "a"
         liftIO $ threadDelay 5000000

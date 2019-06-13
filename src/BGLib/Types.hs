@@ -1,5 +1,6 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE DeriveDataTypeable #-}
 
 module BGLib.Types
     ( Int8
@@ -61,7 +62,6 @@ module BGLib.Types
     , BGResult(..)
     ) where
 
-import           Control.Concurrent
 import           Control.Concurrent.STM.TChan
 import           Control.Monad.Reader
 import           Control.Concurrent.STM
@@ -70,9 +70,12 @@ import           Data.Binary.Get
 import           Data.Binary.Put
 import           Data.Bits
 import qualified Data.ByteString as BSS
+import           Data.Data
 import qualified Data.Int as I
+import           Data.Ix
 import           Data.String
 import qualified Data.Word as W
+import           Foreign.Storable
 import           Numeric
 import           System.Hardware.Serialport
 import           Text.Printf
@@ -84,10 +87,20 @@ type Int8 = I.Int8
 type UInt8 = W.Word8
 
 -- uint16         2 bytes Unsigned 16-bit integer
-type UInt16 = W.Word16
+newtype UInt16 = UInt16 { fromUInt16 :: W.Word16 }
+    deriving (Bounded, Enum, Eq, Integral, Data, Num, Ord, Read, Real, Show, Ix, FiniteBits, Bits, Storable, PrintfArg)
+
+instance Binary UInt16 where
+    get = UInt16 <$> getWord16le
+    put = putWord16le . fromUInt16
 
 -- uint32         4 bytes Unsigned 32-bit integer
-type UInt32 = W.Word32
+newtype UInt32 = UInt32 { fromUInt32 :: W.Word32 }
+    deriving (Bounded, Enum, Eq, Integral, Data, Num, Ord, Read, Real, Show, Ix, FiniteBits, Bits, Storable, PrintfArg)
+
+instance Binary UInt32 where
+    get = UInt32 <$> getWord32le
+    put = putWord32le . fromUInt32
 
 -- uint8array     byte array, first byte is array size
 newtype UInt8Array = UInt8Array { fromUInt8Array :: BSS.ByteString } deriving (Show, IsString)
@@ -890,7 +903,7 @@ instance Binary BGResult where
             BGRUnsupportedGroupType            -> 0x0410
             BGRInsufficientResources           -> 0x0411
             BGRApplicationErrorCode errC       -> (fromIntegral errC .&. 0x001f) .|. 0x0480
-            BGRUnknown errC                    -> errC
+            BGRUnknown errC                    -> fromIntegral errC
 
     get = do
         errC <- getWord16le
@@ -955,4 +968,4 @@ instance Binary BGResult where
             _      ->
                 if errC >= 0x0480 && errC <= 0x049f
                     then BGRApplicationErrorCode $ fromIntegral (errC .&. 0x1f)
-                    else BGRUnknown errC
+                    else BGRUnknown $ fromIntegral errC

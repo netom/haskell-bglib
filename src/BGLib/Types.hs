@@ -19,8 +19,8 @@ module BGLib.Types
     , fromBgPayload
     , toBgPayload
     , BgPacket(..)
-    , HasSerialPort(..)
-    , askSerialPort
+    , HasHandle(..)
+    , askHandle
     , HasBGChan(..)
     , askBGChan
     , askDupBGChan
@@ -79,7 +79,7 @@ import           Data.String
 import qualified Data.Word as W
 import           Foreign.Storable
 import           Numeric
-import           System.Hardware.Serialport
+import           System.IO
 import           Text.Printf
 
 -- int8           1 byte Signed 8-bit integer
@@ -255,11 +255,11 @@ instance Binary BgPacket where
         bgpPayload <- toBgPayload <$> getByteString (fromIntegral bghLength)
         return BgPacket{..}
 
-class HasSerialPort env where
-    getSerialPort :: env -> SerialPort
+class HasHandle env where
+    getHandle :: env -> Handle
 
-askSerialPort :: (MonadReader env m, HasSerialPort env) => m SerialPort
-askSerialPort = getSerialPort <$> ask
+askHandle :: (MonadReader env m, HasHandle env) => m Handle
+askHandle = getHandle <$> ask
 
 class HasBGChan env where
     getBGChan :: env -> TChan BgPacket

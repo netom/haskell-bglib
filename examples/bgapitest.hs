@@ -15,7 +15,7 @@ import           Options.Applicative
 import           Prelude hiding (print, putStrLn)
 import qualified Prelude as P
 import           System.Exit
-import           System.Hardware.Serialport
+import           System.IO hiding (print, putStrLn)
 
 -- This is our monad stack, most of the application runs inside this.
 type AppM env a = ReaderT env IO a
@@ -30,15 +30,15 @@ data AppOptions = AppOptions
 -- ReaderT env IO monad stack
 data App = App
     { appOptions :: AppOptions
-    , appSerialPort :: SerialPort
+    , appHandle  :: Handle
     , appBGChan  :: TChan BgPacket
     }
 
 -- Instances for our environment to properly serve the library
 -- functions.
 
-instance HasSerialPort App where
-    getSerialPort = appSerialPort
+instance HasHandle App where
+    getHandle = appHandle
 
 instance HasBGChan App where
     getBGChan = appBGChan
@@ -99,11 +99,15 @@ main = do
             )
 
     -- Build the application environment
+    -- With certain hardware, you probably want to set baud rate,
+    -- stop and parity bits. You can extract the file descriptor
+    -- from the Handle and use System.Posix.Terminal functions
+    -- to do that, or use the Serial library to open a serial port
+    -- and build a Handle out of the file descriptor of the serial
+    -- port.
     app <- App
         <$> return appOpts
-        <*> openSerial
-            (appOptSerialPort appOpts)
-            (SerialPortSettings CS115200 8 One NoParity NoFlowControl 1000)
+        <*> openFile (appOptSerialPort appOpts) ReadWriteMode
         <*> atomically newBroadcastTChan
 
     -- Run the application
@@ -180,6 +184,6 @@ main = do
             gapEndProcedure
 
         putStrLn "Let's cause trouble:"
-        s <- askSerialPort
-        _ <- liftIO $ send s $ BSS.pack "a"
-        liftIO $ threadDelay 5000000
+        h <- askHandle
+        _ <- liftIO $ BSS.hPut h "a"
+        liftIO $ threadDelay 2000000

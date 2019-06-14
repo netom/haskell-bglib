@@ -1,5 +1,6 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
 
 import           BGLib.Commands
 import           BGLib.Types
@@ -41,6 +42,7 @@ instance HasSerialPort App where
 
 instance HasBGChan App where
     getBGChan = appBGChan
+    updateBGChan chan app = app{ appBGChan = chan }
 
 instance HasDebug App where
     getDebug = appOptDebug . appOptions
@@ -110,7 +112,10 @@ main = do
         -- Register an event handler for protocol errors.
         -- Event handlers are blocking. We use forkApp to make it
         -- "run in the background".
-        _ <- forkApp $ evtSystemProtocolError $ \reason -> do
+        -- The command 'packetBlock' creates a barrier, so new packets
+        -- after this are guaranteed to be picked up by the event handlers
+        -- in the block.
+        packetBlock_ $ forkApp $ evtSystemProtocolError $ \reason -> do
             liftIO $ die $ "*** PROTOCOL ERROR " ++ show reason
 
         -- Starts a thread that keeps reading packets from the serial port,
@@ -160,18 +165,19 @@ main = do
         putStrLn $ "Decrypted: " ++ BSS.unpack (fromUInt8Array decrypted)
         putStrLn ""
         
-        _ <- gapDiscover GapDiscoverGeneric
+        packetBlock_ $ do
+            _ <- gapDiscover GapDiscoverGeneric
 
-        -- Register an event handler for scan responses. Can be done anywhere.
-        -- The handler forks a thread that runs forever, and can be terminated
-        -- later if necessary.
-        _ <- withTimeOut 5000000 $ evtGapScanResponse $ \rssi _ sender _ _ _ -> do
-                print rssi
-                print sender
-                putStrLn ""
-                return $ Nothing -- We'd like to listen to further events.
+            -- Register an event handler for scan responses. Can be done anywhere.
+            -- The handler forks a thread that runs forever, and can be terminated
+            -- later if necessary.
+            _ <- withTimeOut 5000000 $ evtGapScanResponse $ \rssi _ sender _ _ _ -> do
+                    print rssi
+                    print sender
+                    putStrLn ""
+                    return $ Nothing -- We'd like to listen to further events.
 
-        _ <- gapEndProcedure
+            gapEndProcedure
 
         putStrLn "Let's cause trouble:"
         s <- askSerialPort

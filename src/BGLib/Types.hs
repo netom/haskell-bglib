@@ -24,6 +24,8 @@ module BGLib.Types
     , HasBGChan(..)
     , askBGChan
     , askDupBGChan
+    , packetBlock
+    , packetBlock_
     , HasDebug(..)
     , askDebug
     , bsShowHex
@@ -128,9 +130,27 @@ instance Binary BdAddr where
     put BdAddr{..} = put fromBdAddr
     get = get >>= return . BdAddr
 
-data BgMessageType = BgMsgCR | BgMsgEvent deriving (Eq, Show, Enum)
+data BgMessageType = BgMsgCR | BgMsgEvent | BgMsgUnknown UInt8 deriving (Eq, Show)
 
-data BgTecnologyType = BgBlue | BgWifi deriving (Eq, Show, Enum)
+instance Enum BgMessageType where
+    fromEnum BgMsgCR = 0
+    fromEnum BgMsgEvent = 1
+    fromEnum (BgMsgUnknown n) = fromIntegral n
+
+    toEnum 0 = BgMsgCR
+    toEnum 1 = BgMsgEvent
+    toEnum n = BgMsgUnknown (fromIntegral n)
+
+data BgTecnologyType = BgBlue | BgWifi | BgTechUnknown UInt8 deriving (Eq, Show)
+
+instance Enum BgTecnologyType where
+    fromEnum BgBlue = 0
+    fromEnum BgWifi = 1
+    fromEnum (BgTechUnknown n) = fromIntegral n
+
+    toEnum 0 = BgBlue
+    toEnum 1 = BgWifi
+    toEnum n = BgTechUnknown (fromIntegral n)
 
 data BgCommandClass
     = BgClsSystem
@@ -143,7 +163,33 @@ data BgCommandClass
     | BgClsHardware
     | BgClsTest
     | BgClsDfu
-    deriving (Eq, Show, Enum)
+    | BgClsUnknown UInt8
+    deriving (Eq, Show)
+
+instance Enum BgCommandClass where
+    fromEnum BgClsSystem               = 0
+    fromEnum BgClsPersistentStore      = 1
+    fromEnum BgClsAttributeDatabase    = 2
+    fromEnum BgClsConnection           = 3
+    fromEnum BgClsAttributeClient      = 4
+    fromEnum BgClsSecurityManager      = 5
+    fromEnum BgClsGenericAccessProfile = 6
+    fromEnum BgClsHardware             = 7
+    fromEnum BgClsTest                 = 8
+    fromEnum BgClsDfu                  = 9
+    fromEnum (BgClsUnknown n)          = fromIntegral n
+
+    toEnum 0 = BgClsSystem
+    toEnum 1 = BgClsPersistentStore
+    toEnum 2 = BgClsAttributeDatabase
+    toEnum 3 = BgClsConnection
+    toEnum 4 = BgClsAttributeClient
+    toEnum 5 = BgClsSecurityManager
+    toEnum 6 = BgClsGenericAccessProfile
+    toEnum 7 = BgClsHardware
+    toEnum 8 = BgClsTest
+    toEnum 9 = BgClsDfu
+    toEnum n = BgClsUnknown $ fromIntegral n
 
 data BgPacketHeader = BgPacketHeader
     { bghMessageType    :: BgMessageType
@@ -217,6 +263,7 @@ askSerialPort = getSerialPort <$> ask
 
 class HasBGChan env where
     getBGChan :: env -> TChan BgPacket
+    updateBGChan :: TChan BgPacket -> env -> env
 
 askBGChan :: (MonadReader env m, HasBGChan env) => m (TChan BgPacket)
 askBGChan = getBGChan <$> ask
@@ -226,6 +273,14 @@ askDupBGChan = do
     chan <- getBGChan <$> ask
     liftIO $ atomically $ dupTChan chan
 
+packetBlock :: (MonadIO m, MonadReader env m, HasBGChan env) => m a -> m a
+packetBlock act = do
+    newChan <- askDupBGChan
+    local (updateBGChan newChan) act
+
+packetBlock_ :: (MonadIO m, MonadReader env m, HasBGChan env) => m a -> m ()
+packetBlock_ act = packetBlock act >> return ()
+    
 class HasDebug env where
     getDebug :: env -> Bool
 

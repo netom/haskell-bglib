@@ -1,6 +1,7 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module BGLib.Types
     ( Int8
@@ -130,27 +131,9 @@ instance Binary BdAddr where
     put BdAddr{..} = put fromBdAddr
     get = get >>= return . BdAddr
 
-data BgMessageType = BgMsgCR | BgMsgEvent | BgMsgUnknown UInt8 deriving (Eq, Show)
+data BgMessageType = BgMsgCR | BgMsgEvent deriving (Eq, Show, Bounded, Enum)
 
-instance Enum BgMessageType where
-    fromEnum BgMsgCR = 0
-    fromEnum BgMsgEvent = 1
-    fromEnum (BgMsgUnknown n) = fromIntegral n
-
-    toEnum 0 = BgMsgCR
-    toEnum 1 = BgMsgEvent
-    toEnum n = BgMsgUnknown (fromIntegral n)
-
-data BgTecnologyType = BgBlue | BgWifi | BgTechUnknown UInt8 deriving (Eq, Show)
-
-instance Enum BgTecnologyType where
-    fromEnum BgBlue = 0
-    fromEnum BgWifi = 1
-    fromEnum (BgTechUnknown n) = fromIntegral n
-
-    toEnum 0 = BgBlue
-    toEnum 1 = BgWifi
-    toEnum n = BgTechUnknown (fromIntegral n)
+data BgTecnologyType = BgBlue | BgWifi deriving (Eq, Show, Bounded, Enum)
 
 data BgCommandClass
     = BgClsSystem
@@ -163,33 +146,7 @@ data BgCommandClass
     | BgClsHardware
     | BgClsTest
     | BgClsDfu
-    | BgClsUnknown UInt8
-    deriving (Eq, Show)
-
-instance Enum BgCommandClass where
-    fromEnum BgClsSystem               = 0
-    fromEnum BgClsPersistentStore      = 1
-    fromEnum BgClsAttributeDatabase    = 2
-    fromEnum BgClsConnection           = 3
-    fromEnum BgClsAttributeClient      = 4
-    fromEnum BgClsSecurityManager      = 5
-    fromEnum BgClsGenericAccessProfile = 6
-    fromEnum BgClsHardware             = 7
-    fromEnum BgClsTest                 = 8
-    fromEnum BgClsDfu                  = 9
-    fromEnum (BgClsUnknown n)          = fromIntegral n
-
-    toEnum 0 = BgClsSystem
-    toEnum 1 = BgClsPersistentStore
-    toEnum 2 = BgClsAttributeDatabase
-    toEnum 3 = BgClsConnection
-    toEnum 4 = BgClsAttributeClient
-    toEnum 5 = BgClsSecurityManager
-    toEnum 6 = BgClsGenericAccessProfile
-    toEnum 7 = BgClsHardware
-    toEnum 8 = BgClsTest
-    toEnum 9 = BgClsDfu
-    toEnum n = BgClsUnknown $ fromIntegral n
+    deriving (Eq, Show, Bounded, Enum)
 
 data BgPacketHeader = BgPacketHeader
     { bghMessageType    :: BgMessageType
@@ -198,6 +155,15 @@ data BgPacketHeader = BgPacketHeader
     , bghCommandClass   :: BgCommandClass
     , bghCommandId      :: UInt8
     } deriving Show
+
+enumFromIntegral :: forall a b. (Integral a, Bounded b, Enum b) => a -> Get b
+enumFromIntegral i = do
+    let mi = fromEnum (minBound :: b)
+    let ma = fromEnum (maxBound :: b)
+    let ii = fromIntegral i
+    if ii >= mi && ii <= ma
+        then return $ toEnum ii
+        else fail $ "Value out of bounds: " ++ show mi ++ " <= " ++ show ii ++ " <= " ++ show ma
 
 instance Binary BgPacketHeader where
     put BgPacketHeader{..} = do
@@ -217,11 +183,11 @@ instance Binary BgPacketHeader where
     
         let lHigh = oct0 .&. 0x07
 
-        let bghMessageType    = toEnum $ fromIntegral $ oct0 `shift` (-7)
-        let bghTechnologyType = toEnum $ fromIntegral $ (oct0 `shift` (-3)) .&. 0x0f
-        let bghLength         = (fromIntegral lHigh `shift` 8) + (fromIntegral lLow) :: UInt16
-        let bghCommandClass   = toEnum $ fromIntegral clsId
-        let bghCommandId      = cmdId
+        bghMessageType    <- enumFromIntegral $ oct0 `shift` (-7)
+        bghTechnologyType <- enumFromIntegral $ (oct0 `shift` (-3)) .&. 0x0f
+        let bghLength     =  (fromIntegral lHigh `shift` 8) + (fromIntegral lLow) :: UInt16
+        bghCommandClass   <- enumFromIntegral clsId
+        let bghCommandId  =  cmdId
 
         return $ BgPacketHeader{..}
 

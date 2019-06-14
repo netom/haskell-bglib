@@ -154,37 +154,30 @@ import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString as BSS
 import           System.IO
 
--- Write a BgPacket to a Handle
-writeBGPacket' :: Bool -> Handle -> BgPacket -> IO ()
-writeBGPacket' dbg h p = do
-    let packetBS = BSL.toStrict $ encode p
-    when dbg $ do
-        putStr "[DEBUG] WRITE: "
-        putStrLn $ show p
-    BSS.hPut h packetBS
-    return ()
-
 -- Write the BgPacket to the Handle in env asked from the MonadReader
 writeBGPacket :: (MonadIO m, MonadReader env m, HasHandle env, HasDebug env) => BgPacket -> m ()
 writeBGPacket p = do
-    s <- askHandle
+    h <- askHandle
     dbg <- askDebug
-    liftIO $ writeBGPacket' dbg s p
-
-recv' :: Handle -> Int -> IO BSS.ByteString
-recv' h n = do
+    liftIO $ do
+        let packetBS = BSL.toStrict $ encode p
+        when dbg $ do
+            putStr "[DEBUG] WRITE: "
+            putStrLn $ show p
+        BSS.hPut h packetBS
+        return ()
+    
+readData :: Handle -> Int -> IO BSS.ByteString
+readData h n = do
     bs <- BSS.hGet h n
-    let len = BSS.length bs
-    if  len >= n
+    if  BSS.length bs == n
         then return bs
-        else do
-            putStrLn "* SHORT!"
-            BSS.append bs <$> recv' h (n - len)
+        else fail "Could not read enough data"
 
 -- Read one BgPacket from a Handle
-readBGPacket' :: Bool -> Handle -> IO (Maybe BgPacket)
-readBGPacket' dbg h = do
-    bsHeader <- recv' h 4
+readBGPacket :: Bool -> Handle -> IO (Maybe BgPacket)
+readBGPacket dbg h = do
+    bsHeader <- readData h 4
     let eHeader = decodeOrFail $ BSL.fromStrict bsHeader
 
     case eHeader of
@@ -193,19 +186,13 @@ readBGPacket' dbg h = do
                 putStr $ "[DEBUG] ERROR: decoding header: " ++ bsShowHex bsHeader
             return Nothing
         Right (_, _, bgpHeader@BgPacketHeader{..}) -> do
-            bsPayload <- recv' h (fromIntegral bghLength)
+            bsPayload <- readData h (fromIntegral bghLength)
             let bgpPayload = toBgPayload bsPayload
             let p = BgPacket {..}
             when dbg $ do
                 putStr "[DEBUG]  READ: "
                 putStrLn $ show p
             return $ Just p
-
--- Read one BgPacket from the Handle in env asked from the MonadReader
---readBGPacket :: (MonadIO m, MonadReader env m, HasHandle env) => m BgPacket
---readBGPacket = do
---    s <- askHandle
---    liftIO $ readBGPacket' s
 
 -- Launch a thread that reads packets and sends them down a TChan BgPacket
 startPacketReader :: (MonadIO m, MonadReader env m, HasBGChan env, HasHandle env, HasDebug env) => m () 
@@ -214,7 +201,7 @@ startPacketReader = do
     h <- askHandle
     dbg <- askDebug
     _ <- liftIO $ forkIO $ forever $ do
-        Just p <- readBGPacket' dbg h
+        Just p <- readBGPacket dbg h
         atomically $ writeTChan c p
     return ()
 
@@ -303,8 +290,6 @@ uncurry8 func (a, b, c, d, e, f, g, h) = func a b c d e f g h
 -----------------------------------------------------------------------
 -- Attribute Client
 -----------------------------------------------------------------------
---gapDiscover mode = xCmd BgMsgCR BgBlue BgClsGenericAccessProfile 0x02 mode
-
 
 attclientAttributeWrite
     :: (MonadIO m, MonadReader env m, HasHandle env, HasBGChan env, HasDebug env)

@@ -1,49 +1,66 @@
-name:                bglib
-version:             2.0.0.0
-synopsis:            Implementation of the BGAPI serial protocol
-description:         This library implements Silicon Labs' (formerly BlueGiga)
-                     serial protocol to communicate with certain Bluetooth and
-                     Wifi products such as the BLED112 USB dongle or the BLE112
-                     and BLE113 Bluetooth Low Energy modules.
-homepage:            https://github.com/netom/bgapi#readme
-license:             MIT
-license-file:        LICENSE
-author:              Tamas Fabian
-maintainer:          giganetom@gmail.com
-copyright:           MIT
-category:            library
-build-type:          Simple
-extra-source-files:  README.md
-cabal-version:       >=1.10
+cabal-version: 1.12
 
-library
-  hs-source-dirs:      src
-  ghc-options:         -Wall
-  exposed-modules:     BGLib.Commands
-                     , BGLib.Types
-  build-depends:       base >= 4.7 && < 5
-                     , binary
-                     , bytestring
-                     , monad-loops
-                     , mtl
-                     , serialport
-                     , stm
-  default-language:    Haskell2010
+-- This file has been generated from package.yaml by hpack version 0.31.1.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: b7478ef0964926133a64e755f011024c41204954de3dc19dbb3614664ed57c41
 
-executable bgapitest
-  hs-source-dirs:      examples
-  main-is:             bgapitest.hs
-  ghc-options:         -Wall -threaded
-  build-depends:       base >= 4.7 && < 5
-                     , async
-                     , bglib
-                     , bytestring
-                     , mtl
-                     , optparse-applicative
-                     , serialport
-                     , stm
-  default-language:    Haskell2010
+name:           bglib
+version:        2.0.0.0
+synopsis:       Implementation of the BGAPI serial protocol
+description:    This library implements Silicon Labs' (formerly BlueGiga) serial protocol to communicate with certain Bluetooth and Wifi products such as the BLED112 USB dongle or the BLE112 and BLE113 Bluetooth Low Energy modules.
+category:       library
+homepage:       https://github.com/netom/bgapi#readme
+bug-reports:    https://github.com/netom/bgapi/issues
+author:         Tamas Fabian
+maintainer:     giganetom@gmail.com
+copyright:      2019 Tamas Fabian
+license:        MIT
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    LICENSE
 
 source-repository head
-  type:     git
-  location: https://github.com/netom/haskell-bglib
+  type: git
+  location: https://github.com/netom/bgapi
+
+library
+  exposed-modules:
+      BGLib.Commands
+      BGLib.Types
+  other-modules:
+      Paths_bglib
+  hs-source-dirs:
+      src
+  build-depends:
+      base >=4.7 && <5
+    , binary
+    , bytestring
+    , monad-loops
+    , mtl
+    , serialport
+    , stm
+  default-language: Haskell2010
+
+executable bglibtest
+  main-is: bglibtest.hs
+  other-modules:
+      Paths_bglib
+  hs-source-dirs:
+      examples
+  ghc-options: -Wall -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      async
+    , base >=4.7 && <5
+    , bglib
+    , binary
+    , bytestring
+    , monad-loops
+    , mtl
+    , optparse-applicative
+    , serialport
+    , stm
+  default-language: Haskell2010

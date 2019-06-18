@@ -1,0 +1,49 @@
+name:                bglib
+version:             2.0.0.0
+github:              "netom/bgapi"
+license:             MIT
+author:              "Tamas Fabian"
+maintainer:          "giganetom@gmail.com"
+copyright:           "2019 Tamas Fabian"
+
+extra-source-files:
+- README.md
+- LICENSE
+
+# Metadata used when publishing your package
+synopsis:            "Implementation of the BGAPI serial protocol"
+category:            library
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description:         This library implements Silicon Labs' (formerly BlueGiga)
+                     serial protocol to communicate with certain Bluetooth and
+                     Wifi products such as the BLED112 USB dongle or the BLE112
+                     and BLE113 Bluetooth Low Energy modules.
+
+dependencies:
+  - base >= 4.7 && < 5
+  - binary
+  - bytestring
+  - monad-loops
+  - mtl
+  - serialport
+  - stm
+
+library:
+  source-dirs: src
+
+executables:
+  bglibtest:
+    main:                bglibtest.hs
+    source-dirs:         examples
+    ghc-options:
+    - -Wall
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - bglib
+    - async
+    - optparse-applicative

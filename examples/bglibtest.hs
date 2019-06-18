@@ -15,7 +15,7 @@ import           Options.Applicative
 import           Prelude hiding (print, putStrLn)
 import qualified Prelude as P
 import           System.Exit
-import           System.IO hiding (print, putStrLn)
+import           System.Hardware.Serialport
 
 -- This is our monad stack, most of the application runs inside this.
 type AppM env a = ReaderT env IO a
@@ -29,16 +29,16 @@ data AppOptions = AppOptions
 -- The data structure will be our "env", the environment stored in the
 -- ReaderT env IO monad stack
 data App = App
-    { appOptions :: AppOptions
-    , appHandle  :: Handle
-    , appBGChan  :: TChan BgPacket
+    { appOptions    :: AppOptions
+    , appSerialPort :: SerialPort
+    , appBGChan     :: TChan BgPacket
     }
 
 -- Instances for our environment to properly serve the library
 -- functions.
 
-instance HasHandle App where
-    getHandle = appHandle
+instance HasSerialPort App where
+    getSerialPort = appSerialPort
 
 instance HasBGChan App where
     getBGChan = appBGChan
@@ -107,7 +107,7 @@ main = do
     -- port.
     app <- App
         <$> return appOpts
-        <*> openFile (appOptSerialPort appOpts) ReadWriteMode
+        <*> openSerial (appOptSerialPort appOpts) defaultSerialSettings { commSpeed = CS115200 }
         <*> atomically newBroadcastTChan
 
     -- Run the application
@@ -184,6 +184,6 @@ main = do
             gapEndProcedure
 
         putStrLn "Let's cause trouble:"
-        h <- askHandle
-        _ <- liftIO $ BSS.hPut h "a"
+        h <- askSerialPort
+        _ <- liftIO $ send h "a"
         liftIO $ threadDelay 2000000

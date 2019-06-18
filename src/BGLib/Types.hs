@@ -109,7 +109,7 @@ instance Binary UInt32 where
     put = putWord32le . fromUInt32
 
 -- uint8array     byte array, first byte is array size
-newtype UInt8Array = UInt8Array { fromUInt8Array :: BSS.ByteString } deriving IsString
+newtype UInt8Array = UInt8Array { fromUInt8Array :: BSS.ByteString } deriving (Eq, Ord, IsString)
 
 toUInt8Array :: BSS.ByteString -> UInt8Array
 toUInt8Array s = UInt8Array s
@@ -160,7 +160,7 @@ data BgPacketHeader = BgPacketHeader
     , bghLength         :: UInt16 -- Only 11 bits actually
     , bghCommandClass   :: BgCommandClass
     , bghCommandId      :: UInt8
-    } deriving Show
+    } deriving (Eq, Show)
 
 enumFromIntegral :: forall a b. (Integral a, Bounded b, Enum b) => a -> Get b
 enumFromIntegral i = do
@@ -204,7 +204,7 @@ bgHeaderMatches mt tt cc cid BgPacketHeader{..}
     && cc  == bghCommandClass
     && cid == bghCommandId
 
-newtype BgPayload = BgPayload { fromBgPayload :: BSS.ByteString }
+newtype BgPayload = BgPayload { fromBgPayload :: BSS.ByteString } deriving Eq
 
 toBgPayload :: BSS.ByteString -> BgPayload
 toBgPayload = BgPayload
@@ -215,7 +215,7 @@ instance Show BgPayload where
 data BgPacket = BgPacket
     { bgpHeader  :: BgPacketHeader
     , bgpPayload :: BgPayload
-    } deriving Show
+    } deriving (Eq, Show)
 
 instance Binary BgPacket where
     put BgPacket{..} = do
@@ -280,7 +280,7 @@ data RebootMode
     = RebootNormal
     -- Reboot into DFU mode
     | RebootDfu
-    deriving (Show, Enum)
+    deriving (Eq, Show, Enum)
 
 instance Binary RebootMode where
     put m = do
@@ -302,7 +302,7 @@ data AttributeValueType
     -- 5: Value was indicated and the remote device is
     -- waiting for a confirmation
     | AVTIndicateRsqReq
-    deriving (Show, Enum)
+    deriving (Eq, Show, Enum)
 
 instance Binary AttributeValueType where
     put m = do
@@ -322,7 +322,7 @@ data AttributeChangeReason
     -- User Write Response command should
     -- be used to send the confirmation.
     | ACRWriteRequestUser
-    deriving (Show, Enum)
+    deriving (Eq, Show, Enum)
 
 instance Binary AttributeChangeReason where
     put m = do
@@ -397,7 +397,7 @@ data GapAdvType
     | GATLocalnameShort
     | GATLocalnameComplete
     | GATTxPower
-    deriving (Show, Enum)
+    deriving (Eq, Show, Enum)
 
 instance Binary GapAdvType where
     put m = do
@@ -418,7 +418,7 @@ data GapAdvPolicy
     -- Respond to scan requests from whitelist only, allow connection
     -- from whitelist only
     | GAPWhitelistAll
-    deriving (Show, Enum)
+    deriving (Eq, Show, Enum)
 
 instance Binary GapAdvPolicy where
     put m = do
@@ -430,7 +430,7 @@ instance Binary GapAdvPolicy where
 data GapAddressType
     = GATPublic
     | GATRandom
-    deriving (Show, Enum)
+    deriving (Eq, Show, Enum)
 
 instance Binary GapAddressType where
     put m = do
@@ -449,7 +449,7 @@ data GapConnectableMode
     -- packets. Device accepts scan requests (active scanning) but is
     -- not connectable.
     | GCMScannableNonConnectable
-    deriving (Show, Enum)
+    deriving (Eq, Show, Enum)
 
 instance Binary GapConnectableMode where
     put m = do
@@ -483,7 +483,7 @@ data GapDiscoverableMode
     -- reported back to the application through Scan Response event.
     -- This is so called Enhanced Broadcasting mode.
     | GDMEnhancedBroadcasting
-    deriving (Show, Enum)
+    deriving (Eq, Show, Enum)
 
 instance Binary GapDiscoverableMode where
     put m = do
@@ -507,7 +507,7 @@ data GapDiscoverMode
     | GapDiscoverGeneric
     -- Discover all devices regardless of the Flags AD typ
     | GapDiscoverOvservation
-    deriving (Show, Enum)
+    deriving (Eq, Show, Enum)
 
 instance Binary GapDiscoverMode where
     put m = do
@@ -532,7 +532,7 @@ data GSPScanHeaderFlag
     | GSHFConnectReq
     -- Non-connectable undirected advertising event
     | GSHFAdvDiscoverInd
-    deriving (Show, Enum)
+    deriving (Eq, Show, Enum)
 
 instance Binary GSPScanHeaderFlag where
     put m = do
@@ -546,7 +546,7 @@ data GapScanPolicy
     -- Ignore advertisement packets from remote slaves not in the running
     -- whitelist
     | GSPWhitelist
-    deriving (Show, Enum)
+    deriving (Eq, Show, Enum)
 
 instance Binary GapScanPolicy where
     put m = do
@@ -595,7 +595,7 @@ data SMIOCapabilities
     | SICNoIO
     -- Display with Keyboard
     | SICKeyboardDisplay
-    deriving (Enum, Show)
+    deriving (Eq, Enum, Show)
 
 instance Binary SMIOCapabilities where
     put m = do
@@ -616,7 +616,7 @@ data SystemEndpoint
     | SEUART0
     -- USART 1
     | SEUART1
-    deriving (Show, Enum)
+    deriving (Eq, Show, Enum)
 
 instance Binary SystemEndpoint where
     put m = do

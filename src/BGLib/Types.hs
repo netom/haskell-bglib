@@ -25,8 +25,11 @@ module BGLib.Types
     , HasBGChan(..)
     , askBGChan
     , askDupBGChan
+    , askCloneBGChan
     , packetBlock
     , packetBlock_
+    , packetBlock'
+    , packetBlock'_
     , HasDebug(..)
     , askDebug
     , bsShowHex
@@ -81,7 +84,7 @@ import qualified Data.Word as W
 import           Foreign.Storable
 import           Numeric
 import           System.Hardware.Serialport
-import           Text.Printf
+import           Text.Printf 
 
 -- int8           1 byte Signed 8-bit integer
 type Int8 = I.Int8
@@ -106,10 +109,13 @@ instance Binary UInt32 where
     put = putWord32le . fromUInt32
 
 -- uint8array     byte array, first byte is array size
-newtype UInt8Array = UInt8Array { fromUInt8Array :: BSS.ByteString } deriving (Show, IsString)
+newtype UInt8Array = UInt8Array { fromUInt8Array :: BSS.ByteString } deriving IsString
 
 toUInt8Array :: BSS.ByteString -> UInt8Array
 toUInt8Array s = UInt8Array s
+
+instance Show UInt8Array where
+    show = bsShowHex . fromUInt8Array
 
 instance Binary UInt8Array where
     put UInt8Array{..} = do
@@ -239,6 +245,11 @@ askDupBGChan = do
     chan <- getBGChan <$> ask
     liftIO $ atomically $ dupTChan chan
 
+askCloneBGChan :: (MonadIO m, MonadReader env m, HasBGChan env) => m (TChan BgPacket)
+askCloneBGChan = do
+    chan <- getBGChan <$> ask
+    liftIO $ atomically $ cloneTChan chan
+    
 packetBlock :: (MonadIO m, MonadReader env m, HasBGChan env) => m a -> m a
 packetBlock act = do
     newChan <- askDupBGChan
@@ -246,7 +257,15 @@ packetBlock act = do
 
 packetBlock_ :: (MonadIO m, MonadReader env m, HasBGChan env) => m a -> m ()
 packetBlock_ act = packetBlock act >> return ()
-    
+
+packetBlock' :: (MonadIO m, MonadReader env m, HasBGChan env) => m a -> m a
+packetBlock' act = do
+    newChan <- askCloneBGChan
+    local (updateBGChan newChan) act
+
+packetBlock'_ :: (MonadIO m, MonadReader env m, HasBGChan env) => m a -> m ()
+packetBlock'_ act = packetBlock' act >> return ()
+
 class HasDebug env where
     getDebug :: env -> Bool
 
@@ -861,7 +880,7 @@ data BGResult
 
     -- And error code unknown by this library
     | BGRUnknown UInt16
-    deriving Show
+    deriving (Eq, Show)
 
 instance Binary BGResult where
     put m = do

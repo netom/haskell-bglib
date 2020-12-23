@@ -129,7 +129,7 @@ instance Binary UInt8Array where
 
 -- bd_addr        Bluetooth address in little endian format
 newtype BdAddr = BdAddr { fromBdAddr :: (UInt8, UInt8, UInt8, UInt8, UInt8, UInt8) }
-    deriving Eq
+    deriving (Eq, Ord)
 
 instance Show BdAddr where
     show (BdAddr (_5, _4, _3, _2, _1, _0)) = printf "%02x:%02x:%02x:%02x:%02x:%02x" _0 _1 _2 _3 _4 _5

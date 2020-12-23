@@ -185,16 +185,17 @@ writeBGPacket p = do
         return ()
 
 -- Read one BgPacket from a Handle
-readBGPacket :: Bool -> SerialPort -> IO (Maybe BgPacket)
+readBGPacket :: Bool -> SerialPort -> IO (Either String BgPacket)
 readBGPacket dbg h = do
     bsHeader <- readData h 4
     let eHeader = decodeOrFail $ BSL.fromStrict bsHeader
 
     case eHeader of
         Left _ -> do
+            let err = "could not decode header: " ++ bsShowHex bsHeader
             when dbg $ do
-                putStr $ "[DEBUG] ERROR: decoding header: " ++ bsShowHex bsHeader
-            return Nothing
+                putStr $ "[DEBUG] ERROR: " ++ err
+            return $ Left err
         Right (_, _, bgpHeader@BgPacketHeader{..}) -> do
             bsPayload <- readData h (fromIntegral bghLength)
             let bgpPayload = toBgPayload bsPayload
@@ -202,17 +203,19 @@ readBGPacket dbg h = do
             when dbg $ do
                 putStr "[DEBUG]  READ: "
                 putStrLn $ show p
-            return $ Just p
+            return $ Right p
 
 -- Launch a thread that reads packets and sends them down a TChan BgPacket
-startPacketReader :: (MonadIO m, MonadReader env m, HasBGChan env, HasSerialPort env, HasDebug env) => m () 
-startPacketReader = do
+startPacketReader :: (MonadIO m, MonadReader env m, HasBGChan env, HasSerialPort env, HasDebug env) => (String -> IO ()) -> m () 
+startPacketReader errorHandler = do
     c <- askBGChan
     h <- askSerialPort
     dbg <- askDebug
     _ <- liftIO $ forkIO $ forever $ do
-        Just p <- readBGPacket dbg h
-        atomically $ writeTChan c p
+        packetOrErr <- readBGPacket dbg h
+        case packetOrErr of
+            Left err -> errorHandler err
+            Right p -> atomically $ writeTChan c p
     return ()
 
 -- Waits for any BgPacket to appear on the TChan

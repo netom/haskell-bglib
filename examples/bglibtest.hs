@@ -124,7 +124,7 @@ main = do
 
         -- Starts a thread that keeps reading packets from the serial port,
         -- pushing them to the broadcast TChan
-        startPacketReader
+        startPacketReader $ \error -> fail error
 
         putStrLn "Running hello"
         systemHello

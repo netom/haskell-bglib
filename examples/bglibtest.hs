@@ -10,7 +10,6 @@ import           Control.Concurrent.STM
 import           Control.Monad.IO.Class
 import           Control.Monad.Reader
 import qualified Data.ByteString.Char8 as BSS
-import           Data.Semigroup ((<>))
 import           Options.Applicative
 import           Prelude hiding (print, putStrLn)
 import qualified Prelude as P
@@ -124,7 +123,7 @@ main = do
 
         -- Starts a thread that keeps reading packets from the serial port,
         -- pushing them to the broadcast TChan
-        startPacketReader $ \error -> fail error
+        startPacketReader $ \err -> fail err
 
         putStrLn "Running hello"
         systemHello

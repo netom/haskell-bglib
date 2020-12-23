@@ -2,5 +2,5 @@ flags: {}
 packages:
 - .
 extra-deps:
-- serialport-0.4.7
-resolver: lts-13.24
+- serialport-0.5.0
+resolver: lts-16.26

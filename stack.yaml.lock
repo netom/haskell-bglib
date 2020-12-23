@@ -5,15 +5,15 @@
 
 packages:
 - completed:
-    hackage: serialport-0.4.7@sha256:faff483f73c8e8e9661dae3788795bb0f4a38413a49fccb77bcdc6827af50182,1430
+    hackage: serialport-0.5.0@sha256:a2139e8fa0c0da790f58bd943bfa29bb04d455bca4fd51da2c5c3c4d898a5bab,1618
     pantry-tree:
       size: 762
-      sha256: 50b9cd8cc7937d91834a499171f8d0904f63381dda4d90b546fa6f16f1bec2c3
+      sha256: a8dc7f4dacdfa51a90c8896ba0fbaf36a9a9b8f84d80a1dbf4a1ae5983fe4849
   original:
-    hackage: serialport-0.4.7
+    hackage: serialport-0.5.0
 snapshots:
 - completed:
-    size: 498402
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/13/24.yaml
-    sha256: 33e96adfe24f112b62f6edd22565cdbaa13155703bbfbfdc3d0a9bc6138ae7bf
-  original: lts-13.24
+    size: 533252
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/16/26.yaml
+    sha256: cdbc5db9c1afe80a5998247939027a0c7db92fa0f20b5cd01596ec3da628b622
+  original: lts-16.26

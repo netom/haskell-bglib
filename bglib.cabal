@@ -1,13 +1,13 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.31.1.
+-- This file has been generated from package.yaml by hpack version 0.33.0.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 3078f3794eac56137f76356cedbd8523f4e42e423bb7986a027543e61902ed2f
+-- hash: 0876ee6ed8f697bada423cc7990b1db5664acfcc57ed2ba9b4e740c272439747
 
 name:           bglib
-version:        2.0.0.0
+version:        3.0.0.0
 synopsis:       Implementation of the BGAPI serial protocol
 description:    This library implements Silicon Labs' (formerly BlueGiga) serial protocol to communicate with certain Bluetooth and Wifi products such as the BLED112 USB dongle or the BLE112 and BLE113 Bluetooth Low Energy modules.
 category:       library
